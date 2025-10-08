@@ -1,0 +1,20 @@
+<div class="effect-list-container">
+  <div class="header">
+    <h2>Gestion des Effets</h2>
+    <button type="button" (click)="addNewEffect()" class="add-effect-button">
+      <span class="icon">+</span>
+      <span class="text">Nouvel Effet</span>
+    </button>
+  </div>
+
+  <app-data-table
+    [config]="tableConfig"
+    [data]="effects"
+    [loading]="loading"
+    (actionClick)="onActionClick($event)"
+    (rowClick)="onRowClick($event)"
+    (selectionChange)="onSelectionChange($event)"
+    (pageChange)="onPageChange($event)"
+    (sortChange)="onSortChange($event)">
+  </app-data-table>
+</div>

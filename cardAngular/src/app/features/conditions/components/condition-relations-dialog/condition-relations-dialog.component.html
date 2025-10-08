@@ -1,0 +1,68 @@
+<div class="condition-relations-dialog">
+  <h2 mat-dialog-title>
+    Gérer les relations de la condition : {{ condition.nameCondition }}
+  </h2>
+
+  <mat-dialog-content>
+    <div class="dialog-content">
+      <p class="condition-description">{{ condition.description }}</p>
+
+      <!-- Section Effets -->
+      <div class="section">
+        <h3>Effets associés à cette condition</h3>
+        <div class="selection-grid" *ngIf="allEffects.length > 0">
+          <div *ngFor="let effect of allEffects"
+               class="selection-item"
+               [class.selected]="isEffectSelected(effect.id)"
+               (click)="onEffectToggle(effect.id)">
+            <div class="item-content">
+              <h4 class="item-name">{{ effect.effectName }}</h4>
+              <p class="item-description">{{ effect.description }}</p>
+            </div>
+            <mat-icon class="selection-icon">
+              {{ isEffectSelected(effect.id) ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+          </div>
+        </div>
+        <p *ngIf="allEffects.length === 0" class="no-data">
+          Aucun effet disponible.
+        </p>
+      </div>
+
+      <!-- Section Actions -->
+      <div class="section">
+        <h3>Actions associées à cette condition</h3>
+        <div class="selection-grid" *ngIf="allActions.length > 0">
+          <div *ngFor="let action of allActions"
+               class="selection-item"
+               [class.selected]="isActionSelected(action.id)"
+               (click)="onActionToggle(action.id)">
+            <div class="item-content">
+              <h4 class="item-name">{{ action.actionName }}</h4>
+              <p class="item-description">{{ action.description }}</p>
+            </div>
+            <mat-icon class="selection-icon">
+              {{ isActionSelected(action.id) ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+          </div>
+        </div>
+        <p *ngIf="allActions.length === 0" class="no-data">
+          Aucune action disponible.
+        </p>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="loading">
+      Annuler
+    </button>
+    <button mat-raised-button
+            color="primary"
+            (click)="onSave()"
+            [disabled]="loading">
+      <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+      <span *ngIf="!loading">Sauvegarder</span>
+    </button>
+  </mat-dialog-actions>
+</div>

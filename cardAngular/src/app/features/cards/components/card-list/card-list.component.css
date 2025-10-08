@@ -1,0 +1,88 @@
+.card-list-container {
+  padding: 24px;
+  background-color: var(--background-secondary);
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: var(--background-primary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-light);
+  border: 2px solid var(--primary-color);
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.add-card-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--primary-color);
+  color: var(--text-white);
+  border: 2px solid var(--primary-color);
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: inherit;
+  text-decoration: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.add-card-button:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.add-card-button:focus {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+.add-card-button .icon {
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.add-card-button .text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-list-container {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .header h2 {
+    text-align: center;
+  }
+
+  .add-card-button {
+    justify-content: center !important;
+  }
+}

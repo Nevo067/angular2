@@ -1,0 +1,151 @@
+<div class="effect-edit-dialog">
+  <h2 mat-dialog-title>
+    {{ isEditMode ? 'Modifier l\'effet' : 'Nouvel effet' }}
+  </h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="effectForm" class="effect-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nom de l'effet</mat-label>
+        <input matInput formControlName="effectName" placeholder="Entrez le nom de l'effet">
+        <mat-error *ngIf="hasError('effectName', 'required')">
+          {{ getErrorMessage('effectName') }}
+        </mat-error>
+        <mat-error *ngIf="hasError('effectName', 'minlength')">
+          {{ getErrorMessage('effectName') }}
+        </mat-error>
+      </mat-form-field>
+
+       <mat-form-field appearance="outline" class="full-width">
+         <mat-label>Description</mat-label>
+         <textarea matInput formControlName="description" rows="4"
+                  placeholder="Décrivez l'effet en détail"></textarea>
+         <mat-error *ngIf="hasError('description', 'required')">
+           {{ getErrorMessage('description') }}
+         </mat-error>
+       </mat-form-field>
+
+       <!-- Section Conditions -->
+       <div class="section-container">
+         <h3 class="section-title">Conditions associées</h3>
+
+         <!-- Liste des conditions sélectionnées avec ordre -->
+         <div class="selected-items" *ngIf="getSelectedConditions().length > 0">
+           <h4 class="subsection-title">Ordre des conditions sélectionnées :</h4>
+           <div class="selected-list">
+             <div *ngFor="let condition of getSelectedConditions(); let i = index"
+                  class="selected-item">
+               <div class="order-number">{{ i + 1 }}</div>
+               <div class="item-info">
+                 <h5 class="item-name">{{ condition.nameCondition }}</h5>
+                 <p class="item-description">{{ condition.description }}</p>
+               </div>
+               <div class="item-actions">
+                 <button mat-icon-button (click)="moveConditionUp(i)" [disabled]="i === 0">
+                   <mat-icon>keyboard_arrow_up</mat-icon>
+                 </button>
+                 <button mat-icon-button (click)="moveConditionDown(i)" [disabled]="i === getSelectedConditions().length - 1">
+                   <mat-icon>keyboard_arrow_down</mat-icon>
+                 </button>
+                 <button mat-icon-button (click)="removeCondition(i)" color="warn">
+                   <mat-icon>remove_circle</mat-icon>
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         <!-- Liste des conditions disponibles -->
+         <div class="available-items">
+           <h4 class="subsection-title">Conditions disponibles :</h4>
+           <div class="selection-grid" *ngIf="availableConditions.length > 0">
+             <div *ngFor="let condition of availableConditions"
+                  class="selection-item"
+                  [class.selected]="isConditionSelected(condition.id)"
+                  (click)="toggleCondition(condition.id)">
+               <div class="item-content">
+                 <h4 class="item-name">
+                   {{ condition.nameCondition }}
+                   <span *ngIf="getConditionSelectionOrder(condition.id) > 0"
+                         class="order-badge">#{{ getConditionSelectionOrder(condition.id) }}</span>
+                 </h4>
+                 <p class="item-description">{{ condition.description }}</p>
+               </div>
+               <mat-icon class="selection-icon">
+                 {{ isConditionSelected(condition.id) ? 'check_circle' : 'radio_button_unchecked' }}
+               </mat-icon>
+             </div>
+           </div>
+           <p *ngIf="availableConditions.length === 0" class="no-data">
+             Aucune condition disponible. Créez d'abord des conditions.
+           </p>
+         </div>
+       </div>
+
+       <!-- Section Actions -->
+       <div class="section-container">
+         <h3 class="section-title">Actions associées</h3>
+
+         <!-- Liste des actions sélectionnées avec ordre -->
+         <div class="selected-items" *ngIf="getSelectedActions().length > 0">
+           <h4 class="subsection-title">Ordre des actions sélectionnées :</h4>
+           <div class="selected-list">
+             <div *ngFor="let action of getSelectedActions(); let i = index"
+                  class="selected-item">
+               <div class="order-number">{{ i + 1 }}</div>
+               <div class="item-info">
+                 <h5 class="item-name">{{ action.actionName }}</h5>
+                 <p class="item-description">{{ action.description }}</p>
+               </div>
+               <div class="item-actions">
+                 <button mat-icon-button (click)="moveActionUp(i)" [disabled]="i === 0">
+                   <mat-icon>keyboard_arrow_up</mat-icon>
+                 </button>
+                 <button mat-icon-button (click)="moveActionDown(i)" [disabled]="i === getSelectedActions().length - 1">
+                   <mat-icon>keyboard_arrow_down</mat-icon>
+                 </button>
+                 <button mat-icon-button (click)="removeAction(i)" color="warn">
+                   <mat-icon>remove_circle</mat-icon>
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         <!-- Liste des actions disponibles -->
+         <div class="available-items">
+           <h4 class="subsection-title">Actions disponibles :</h4>
+           <div class="selection-grid" *ngIf="availableActions.length > 0">
+             <div *ngFor="let action of availableActions"
+                  class="selection-item"
+                  [class.selected]="isActionSelected(action.id)"
+                  (click)="toggleAction(action.id)">
+               <div class="item-content">
+                 <h4 class="item-name">
+                   {{ action.actionName }}
+                   <span *ngIf="getActionSelectionOrder(action.id) > 0"
+                         class="order-badge">#{{ getActionSelectionOrder(action.id) }}</span>
+                 </h4>
+                 <p class="item-description">{{ action.description }}</p>
+               </div>
+               <mat-icon class="selection-icon">
+                 {{ isActionSelected(action.id) ? 'check_circle' : 'radio_button_unchecked' }}
+               </mat-icon>
+             </div>
+           </div>
+           <p *ngIf="availableActions.length === 0" class="no-data">
+             Aucune action disponible. Créez d'abord des actions.
+           </p>
+         </div>
+       </div>
+     </form>
+   </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Annuler</button>
+    <button mat-raised-button color="warn" (click)="onSave()"
+            [disabled]="effectForm.invalid">
+      {{ isEditMode ? 'Modifier' : 'Créer' }}
+    </button>
+  </mat-dialog-actions>
+</div>

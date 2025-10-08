@@ -1,0 +1,94 @@
+<div class="condition-edit-dialog">
+  <h2 mat-dialog-title>
+    {{ isEditMode ? 'Modifier la condition' : 'Nouvelle condition' }}
+  </h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="conditionForm" class="condition-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nom de la condition</mat-label>
+        <input matInput formControlName="nameCondition" placeholder="Entrez le nom de la condition">
+        <mat-error *ngIf="hasError('nameCondition', 'required')">
+          {{ getErrorMessage('nameCondition') }}
+        </mat-error>
+        <mat-error *ngIf="hasError('nameCondition', 'minlength')">
+          {{ getErrorMessage('nameCondition') }}
+        </mat-error>
+      </mat-form-field>
+
+       <mat-form-field appearance="outline" class="full-width">
+         <mat-label>Description</mat-label>
+         <textarea matInput formControlName="description" rows="3"
+                 placeholder="Décrivez la condition"></textarea>
+         <mat-error *ngIf="hasError('description', 'required')">
+           {{ getErrorMessage('description') }}
+         </mat-error>
+       </mat-form-field>
+
+       <!-- Section Actions -->
+       <div class="section-container">
+         <h3 class="section-title">Actions associées</h3>
+
+         <!-- Liste des actions sélectionnées avec ordre -->
+         <div class="selected-items" *ngIf="getSelectedActions().length > 0">
+           <h4 class="subsection-title">Ordre des actions sélectionnées :</h4>
+           <div class="selected-list">
+             <div *ngFor="let action of getSelectedActions(); let i = index"
+                  class="selected-item">
+               <div class="order-number">{{ i + 1 }}</div>
+               <div class="item-info">
+                 <h5 class="item-name">{{ action.actionName }}</h5>
+                 <p class="item-description">{{ action.description }}</p>
+               </div>
+               <div class="item-actions">
+                 <button mat-icon-button (click)="moveActionUp(i)" [disabled]="i === 0">
+                   <mat-icon>keyboard_arrow_up</mat-icon>
+                 </button>
+                 <button mat-icon-button (click)="moveActionDown(i)" [disabled]="i === getSelectedActions().length - 1">
+                   <mat-icon>keyboard_arrow_down</mat-icon>
+                 </button>
+                 <button mat-icon-button (click)="removeAction(i)" color="warn">
+                   <mat-icon>remove_circle</mat-icon>
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         <!-- Liste des actions disponibles -->
+         <div class="available-items">
+           <h4 class="subsection-title">Actions disponibles :</h4>
+           <div class="selection-grid" *ngIf="availableActions.length > 0">
+             <div *ngFor="let action of availableActions"
+                  class="selection-item"
+                  [class.selected]="isActionSelected(action.id)"
+                  (click)="toggleAction(action.id)">
+               <div class="item-content">
+                 <h4 class="item-name">
+                   {{ action.actionName }}
+                   <span *ngIf="getActionSelectionOrder(action.id) > 0"
+                         class="order-badge">#{{ getActionSelectionOrder(action.id) }}</span>
+                 </h4>
+                 <p class="item-description">{{ action.description }}</p>
+               </div>
+               <mat-icon class="selection-icon">
+                 {{ isActionSelected(action.id) ? 'check_circle' : 'radio_button_unchecked' }}
+               </mat-icon>
+             </div>
+           </div>
+           <p *ngIf="availableActions.length === 0" class="no-data">
+             Aucune action disponible. Créez d'abord des actions.
+           </p>
+         </div>
+       </div>
+     </form>
+   </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Annuler</button>
+    <button mat-raised-button color="accent" (click)="onSave()"
+            [disabled]="conditionForm.invalid">
+      {{ isEditMode ? 'Modifier' : 'Créer' }}
+    </button>
+  </mat-dialog-actions>
+</div>

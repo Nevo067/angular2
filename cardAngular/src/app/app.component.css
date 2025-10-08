@@ -1,0 +1,52 @@
+/* Styles pour l'application principale - Thème Noir */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-secondary);
+}
+
+.app-header {
+  background: var(--gradient-dark);
+  color: var(--text-on-dark);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--shadow-dark);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.app-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--text-on-dark);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.app-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+  color: var(--text-on-dark);
+}
+
+.app-main {
+  flex: 1;
+  padding: 0;
+  background-color: var(--background-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 2rem;
+  }
+
+  .app-header p {
+    font-size: 1rem;
+  }
+}

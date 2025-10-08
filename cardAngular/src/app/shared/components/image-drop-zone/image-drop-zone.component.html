@@ -1,0 +1,36 @@
+<div class="image-drop-zone"
+     [class.drag-over]="isDragOver"
+     [class.disabled]="disabled"
+     (click)="fileInput.click()">
+
+  <!-- Zone de drop -->
+  <div class="drop-area" *ngIf="previewUrls.length === 0">
+    <div class="drop-content">
+      <div class="drop-icon">📁</div>
+      <p class="drop-text">{{ placeholder }}</p>
+      <p class="drop-hint">Formats acceptés: JPG, PNG, GIF, WebP</p>
+      <p class="drop-hint">Taille max: {{ formatFileSize(maxFileSize) }}</p>
+    </div>
+  </div>
+
+  <!-- Prévisualisations -->
+  <div class="preview-container" *ngIf="previewUrls.length > 0">
+    <div class="preview-grid">
+      <div class="preview-item" *ngFor="let url of previewUrls; let i = index">
+        <img [src]="url" [alt]="'Prévisualisation ' + (i + 1)" class="preview-image">
+        <button class="remove-btn" (click)="removePreview(i)" [disabled]="disabled">
+          ✕
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input caché -->
+  <input #fileInput
+         type="file"
+         multiple
+         [accept]="acceptedTypes.join(',')"
+         (change)="onFileSelected($event)"
+         style="display: none;"
+         [disabled]="disabled">
+</div>

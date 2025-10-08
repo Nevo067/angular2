@@ -1,0 +1,74 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* Angular Material Theme */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Variables de couleurs cohérentes pour toute l'application - Thème Noir */
+:root {
+  /* Couleurs principales - Thème Noir */
+  --primary-color: #000000;
+  --primary-dark: #000000;
+  --primary-light: #333333;
+  --secondary-color: #1a1a1a;
+  --secondary-dark: #0d0d0d;
+  --secondary-light: #404040;
+
+  /* Couleurs de fond */
+  --background-primary: #ffffff;
+  --background-secondary: #f8f9fa;
+  --background-tertiary: #e9ecef;
+  --background-dark: #212529;
+  --background-darker: #1a1a1a;
+  --background-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Couleurs de texte */
+  --text-primary: #000000;
+  --text-secondary: #495057;
+  --text-muted: #6c757d;
+  --text-light: #adb5bd;
+  --text-white: #ffffff;
+  --text-on-dark: #ffffff;
+
+  /* Couleurs de bordure */
+  --border-light: #dee2e6;
+  --border-medium: #ced4da;
+  --border-dark: #adb5bd;
+  --border-darker: #6c757d;
+
+  /* Couleurs d'état */
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --error-color: #dc3545;
+  --info-color: #17a2b8;
+
+  /* Couleurs d'interaction */
+  --hover-background: #f8f9fa;
+  --hover-background-dark: #404040;
+  --selected-background: #e9ecef;
+  --selected-background-dark: #495057;
+  --active-background: #dee2e6;
+  --active-background-dark: #6c757d;
+
+  /* Ombres */
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --shadow-heavy: 0 8px 16px rgba(0, 0, 0, 0.2);
+  --shadow-dark: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  /* Dégradés */
+  --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  --gradient-light: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 100%);
+  --gradient-dark: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+}
+
+/* Global styles */
+html, body {
+  height: 100%;
+  background-color: var(--background-secondary);
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  color: var(--text-primary);
+}

@@ -1,0 +1,124 @@
+<div class="data-table-container">
+  <!-- Filtre global -->
+  <div class="table-header" *ngIf="config.filtering?.globalFilter">
+    <div class="search-container">
+      <input matInput [formControl]="globalFilterControl"
+             placeholder="Rechercher dans toutes les colonnes..."
+             class="search-input">
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="table-wrapper">
+    <mat-table [dataSource]="dataSource" class="data-table" matSort>
+
+      <!-- Colonne de sélection -->
+      <ng-container matColumnDef="select" *ngIf="config.selection?.enabled">
+        <mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            (change)="$event ? masterToggle() : null"
+            [checked]="hasValue() && isAllSelected()"
+            [indeterminate]="hasValue() && !isAllSelected()">
+          </mat-checkbox>
+        </mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="$event ? toggle(row) : null"
+            [checked]="isSelected(row)">
+          </mat-checkbox>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Colonnes dynamiques -->
+      <ng-container *ngFor="let column of config.columns" [matColumnDef]="column.key">
+        <mat-header-cell *matHeaderCellDef [mat-sort-header]="column.sortable ? column.key : ''">
+          {{ column.label }}
+        </mat-header-cell>
+        <mat-cell *matCellDef="let row; let i = index"
+                  [style.text-align]="column.align || 'left'"
+                  [style.width]="column.width">
+
+          <!-- Type image -->
+          <div *ngIf="column.type === 'image'" class="image-cell">
+            <img *ngIf="row[column.key]"
+                 [src]="cleanImageUrl(row[column.key])"
+                 [alt]="column.label"
+                 class="table-image"
+                 (error)="$event.target.style.display='none'">
+            <div *ngIf="!row[column.key]" class="no-image-placeholder">
+              <mat-icon>image_not_supported</mat-icon>
+            </div>
+          </div>
+
+          <!-- Type chip -->
+          <mat-chip *ngIf="column.type === 'chip'"
+                    [color]="getChipConfig(column, row[column.key])?.color"
+                    [style.color]="getChipConfig(column, row[column.key])?.textColor">
+            {{ formatCellValue(column, row[column.key], row) }}
+          </mat-chip>
+
+          <!-- Type boolean -->
+          <mat-icon *ngIf="column.type === 'boolean'"
+                    [color]="row[column.key] ? 'primary' : 'warn'">
+            {{ row[column.key] ? 'check_circle' : 'cancel' }}
+          </mat-icon>
+
+          <!-- Type par défaut -->
+          <span *ngIf="!['image', 'chip', 'boolean'].includes(column.type)">
+            {{ formatCellValue(column, row[column.key], row) }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Colonne des actions -->
+      <ng-container matColumnDef="actions" *ngIf="config.actions && config.actions.length > 0">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let row; let i = index">
+          <button mat-icon-button
+                  *ngFor="let action of config.actions"
+                  [matTooltip]="action.tooltip || action.label"
+                  [color]="action.color"
+                  [disabled]="isActionDisabled(action, row)"
+                  [style.display]="isActionHidden(action, row) ? 'none' : 'inline-block'"
+                  (click)="onActionClick(action, row, i); $event.stopPropagation()"
+                  class="action-button">
+            <mat-icon>{{ action.icon }}</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <!-- En-tête du tableau -->
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+
+      <!-- Lignes du tableau -->
+      <mat-row *matRowDef="let row; columns: displayedColumns;"
+               (click)="onRowClick(row)"
+               class="table-row">
+      </mat-row>
+
+      <!-- Message vide -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length" class="no-data-cell">
+          <div class="no-data-message">
+            <mat-icon>inbox</mat-icon>
+            <p>{{ config.emptyMessage || 'Aucune donnée disponible' }}</p>
+          </div>
+        </td>
+      </tr>
+    </mat-table>
+  </div>
+
+  <!-- Pagination -->
+  <mat-paginator *ngIf="config.pagination"
+                 [pageSize]="config.pagination.pageSize"
+                 [pageSizeOptions]="config.pagination.pageSizeOptions"
+                 [showFirstLastButtons]="config.pagination.showFirstLastButtons"
+                 (page)="onPageChange($event)">
+  </mat-paginator>
+
+  <!-- Indicateur de chargement -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+</div>

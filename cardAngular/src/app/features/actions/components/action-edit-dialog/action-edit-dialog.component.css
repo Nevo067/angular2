@@ -1,0 +1,57 @@
+.action-edit-dialog {
+  width: 100%;
+  max-width: 600px;
+  min-height: 400px;
+}
+
+.action-form {
+  padding: 16px 0;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.third-width {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .action-edit-dialog {
+    max-width: 100%;
+    min-height: 350px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .third-width {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+}
+
+/* Styles pour les erreurs de formulaire */
+mat-error {
+  font-size: 12px;
+  color: var(--error-color);
+}
+
+/* Styles pour les champs focus */
+.mat-form-field.mat-focused .mat-form-field-label {
+  color: var(--primary-color);
+}
+
+.mat-form-field.mat-focused .mat-form-field-ripple {
+  background-color: var(--primary-color);
+}

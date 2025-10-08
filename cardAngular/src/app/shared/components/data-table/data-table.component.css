@@ -1,0 +1,243 @@
+.data-table-container {
+  position: relative;
+  width: 100%;
+  background-color: var(--background-primary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--border-light);
+}
+
+.table-header {
+  padding: 16px;
+  border-bottom: 2px solid var(--primary-color);
+  background-color: var(--background-tertiary);
+  border-radius: 8px 8px 0 0;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  min-width: 320px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 2px solid var(--border-light);
+  border-radius: 8px;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-light);
+  border-radius: 0 0 8px 8px;
+  background-color: var(--background-primary);
+}
+
+.data-table {
+  width: 100%;
+  min-width: 600px;
+  background-color: var(--background-primary);
+}
+
+.table-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table-row:hover {
+  background-color: var(--hover-background);
+  border-left: 3px solid var(--primary-color);
+}
+
+.table-row.selected {
+  background-color: var(--selected-background);
+  border-left: 3px solid var(--primary-color);
+}
+
+.image-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+}
+
+.table-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+}
+
+.no-image-placeholder {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.no-image-placeholder mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.no-data-cell {
+  text-align: center;
+  padding: 40px 16px;
+  background-color: var(--background-primary);
+}
+
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.no-data-message mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  color: var(--text-light);
+}
+
+.no-data-message p {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--background-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .table-header {
+    padding: 8px;
+  }
+
+  .search-container {
+    max-width: 100%;
+    min-width: 280px;
+  }
+
+  .search-input {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .data-table {
+    min-width: 400px;
+  }
+}
+
+/* Styles pour les chips */
+mat-chip {
+  font-size: 12px;
+  min-height: 24px;
+  padding: 0 8px;
+  background-color: var(--primary-color);
+  color: var(--text-white);
+  border: 1px solid var(--primary-color);
+}
+
+/* Styles pour les icônes */
+mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Styles pour les boutons d'action */
+.action-button {
+  margin: 0 2px;
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.action-button mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.action-button:hover {
+  background-color: var(--hover-background);
+  transform: scale(1.1);
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Styles pour la colonne Actions */
+.mat-column-actions {
+  width: 300px !important;
+  min-width: 300px !important;
+  text-align: center;
+}
+
+.mat-column-actions .mat-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 8px;
+}
+
+/* Styles pour la pagination */
+mat-paginator {
+  border-top: 1px solid var(--border-light);
+  background-color: var(--background-tertiary);
+  border-radius: 0 0 8px 8px;
+}

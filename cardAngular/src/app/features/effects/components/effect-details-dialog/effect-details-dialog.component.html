@@ -1,0 +1,86 @@
+<div class="effect-details-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon class="title-icon">auto_awesome</mat-icon>
+    Détails de l'effet : {{ data.effect.effectName }}
+  </h2>
+
+  <mat-dialog-content>
+    <div class="effect-content">
+      <!-- Informations générales -->
+      <div class="info-section">
+        <h3 class="section-title">
+          <mat-icon>info</mat-icon>
+          Informations générales
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>ID :</label>
+            <span>{{ data.effect.id }}</span>
+          </div>
+          <div class="info-item">
+            <label>Nom :</label>
+            <span>{{ data.effect.effectName }}</span>
+          </div>
+          <div class="info-item full-width">
+            <label>Description :</label>
+            <span>{{ data.effect.description }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conditions associées -->
+      <div class="relations-section" *ngIf="data.effect.conditionCards && data.effect.conditionCards.length > 0">
+        <h3 class="section-title">
+          <mat-icon>rule</mat-icon>
+          Conditions associées ({{ data.effect.conditionCards.length }})
+        </h3>
+        <div class="relations-grid">
+          <div *ngFor="let condition of data.effect.conditionCards; let i = index"
+               class="relation-card condition-card">
+            <div class="card-header">
+              <div class="order-badge">{{ i + 1 }}</div>
+              <h4 class="card-title">{{ condition.nameCondition }}</h4>
+            </div>
+            <div class="card-content">
+              <p class="card-description">{{ condition.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-data" *ngIf="!data.effect.conditionCards || data.effect.conditionCards.length === 0">
+        <mat-icon>rule</mat-icon>
+        <p>Aucune condition associée</p>
+      </div>
+
+      <!-- Actions associées -->
+      <div class="relations-section" *ngIf="data.effect.actions && data.effect.actions.length > 0">
+        <h3 class="section-title">
+          <mat-icon>sports_mma</mat-icon>
+          Actions associées ({{ data.effect.actions.length }})
+        </h3>
+        <div class="relations-grid">
+          <div *ngFor="let action of data.effect.actions; let i = index"
+               class="relation-card action-card">
+            <div class="card-header">
+              <div class="order-badge">{{ i + 1 }}</div>
+              <h4 class="card-title">{{ action.actionName }}</h4>
+            </div>
+            <div class="card-content">
+              <p class="card-description">{{ action.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-data" *ngIf="!data.effect.actions || data.effect.actions.length === 0">
+        <mat-icon>sports_mma</mat-icon>
+        <p>Aucune action associée</p>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onClose()">Fermer</button>
+  </mat-dialog-actions>
+</div>

@@ -1,0 +1,381 @@
+<div class="card-edit-dialog">
+  <h2 mat-dialog-title>
+    {{ isEditMode ? 'Modifier la carte' : 'Nouvelle carte' }}
+  </h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="cardForm" class="card-form">
+      <!-- Informations de base -->
+      <mat-tab-group>
+        <mat-tab label="Informations de base">
+          <div class="form-section">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Nom de la carte</mat-label>
+              <input matInput formControlName="name" placeholder="Entrez le nom de la carte">
+              <mat-error *ngIf="hasError('name', 'required')">
+                {{ getErrorMessage('name') }}
+              </mat-error>
+              <mat-error *ngIf="hasError('name', 'minlength')">
+                {{ getErrorMessage('name') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="3"
+                       placeholder="Décrivez la carte"></textarea>
+              <mat-error *ngIf="hasError('description', 'required')">
+                {{ getErrorMessage('description') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Images">
+          <div class="form-section">
+            <h3>Images de la carte</h3>
+            <p class="section-description">
+              Ajoutez des images pour illustrer votre carte. Vous pouvez glisser-déposer plusieurs images à la fois.
+            </p>
+
+            <!-- Zone de drag and drop intégrée -->
+            <div class="image-drop-zone"
+                 [class.drag-over]="isDragOver"
+                 (click)="fileInput.click()"
+                 (dragover)="onDragOver($event)"
+                 (dragleave)="onDragLeave($event)"
+                 (drop)="onDrop($event)">
+
+              <!-- Zone de drop -->
+              <div class="drop-area" *ngIf="previewUrls.length === 0">
+                <div class="drop-content">
+                  <div class="drop-icon">📁</div>
+                  <p class="drop-text">Glissez-déposez les images de la carte ici</p>
+                  <p class="drop-hint">Formats acceptés: JPG, PNG, GIF, WebP</p>
+                  <p class="drop-hint">Taille max: 5MB par image</p>
+                </div>
+              </div>
+
+              <!-- Prévisualisations -->
+              <div class="preview-container" *ngIf="previewUrls.length > 0">
+                <div class="preview-grid">
+                  <div class="preview-item" *ngFor="let url of previewUrls; let i = index">
+                    <img [src]="url" [alt]="'Prévisualisation ' + (i + 1)" class="preview-image">
+                    <button class="remove-btn" (click)="removePreview(i)">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Input caché -->
+              <input #fileInput
+                     type="file"
+                     multiple
+                     accept="image/jpeg,image/png,image/gif,image/webp"
+                     (change)="onFileSelected($event)"
+                     style="display: none;">
+            </div>
+
+            <!-- Boutons d'upload -->
+            <div class="upload-actions" *ngIf="selectedImages.length > 0">
+              <button mat-raised-button color="primary" (click)="uploadAllImages()" [disabled]="isUploading">
+                <mat-icon>cloud_upload</mat-icon>
+                Uploader {{ selectedImages.length }} image(s)
+              </button>
+              <button mat-button (click)="clearSelectedImages()">
+                <mat-icon>clear</mat-icon>
+                Annuler
+              </button>
+            </div>
+
+            <!-- Bouton de test pour l'endpoint d'upload (visible seulement en mode édition) -->
+            <div class="test-actions" *ngIf="isEditMode && data.card?.id">
+              <button mat-stroked-button color="accent" (click)="testUploadEndpoint()" [disabled]="isUploading">
+                <mat-icon>science</mat-icon>
+                Tester l'endpoint d'upload
+              </button>
+            </div>
+
+            <!-- Message informatif pour la création avec image -->
+            <div class="info-message" *ngIf="!isEditMode && selectedImages.length > 0">
+              <mat-icon>info</mat-icon>
+              <span>La carte sera créée avec l'image en une seule opération !</span>
+            </div>
+
+            <!-- Images existantes -->
+            <div class="existing-images" *ngIf="existingImages.length > 0">
+              <h4>Images existantes</h4>
+              <div class="image-grid">
+                <div class="image-item" *ngFor="let image of existingImages; let i = index">
+                  <img [src]="image.url" [alt]="'Image ' + (i + 1)" class="existing-image" *ngIf="image.url">
+                  <button mat-icon-button class="remove-image-btn" (click)="removeExistingImage(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Propriétés">
+          <div class="form-section">
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Type de monstre</mat-label>
+                <mat-select formControlName="monsterType">
+                  <mat-option *ngFor="let type of monsterTypes" [value]="type">
+                    {{ getMonsterTypeLabel(type) }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="hasError('monsterType', 'required')">
+                  {{ getErrorMessage('monsterType') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Type d'élément</mat-label>
+                <mat-select formControlName="elementType">
+                  <mat-option *ngFor="let type of elementTypes" [value]="type">
+                    {{ getElementTypeLabel(type) }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="hasError('elementType', 'required')">
+                  {{ getErrorMessage('elementType') }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Points d'attaque</mat-label>
+                <input matInput type="number" formControlName="attackPoints" min="0">
+                <mat-error *ngIf="hasError('attackPoints', 'required')">
+                  {{ getErrorMessage('attackPoints') }}
+                </mat-error>
+                <mat-error *ngIf="hasError('attackPoints', 'min')">
+                  {{ getErrorMessage('attackPoints') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Points de défense</mat-label>
+                <input matInput type="number" formControlName="defensePoints" min="0">
+                <mat-error *ngIf="hasError('defensePoints', 'required')">
+                  {{ getErrorMessage('defensePoints') }}
+                </mat-error>
+                <mat-error *ngIf="hasError('defensePoints', 'min')">
+                  {{ getErrorMessage('defensePoints') }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>URL de l'image</mat-label>
+              <input matInput formControlName="imageUrl" placeholder="https://...">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Tags (séparés par des virgules)</mat-label>
+              <input matInput formControlName="tags" placeholder="puissant, dragon, feu">
+              <mat-hint>Exemple: puissant, dragon, feu</mat-hint>
+            </mat-form-field>
+          </div>
+        </mat-tab>
+
+        <!-- Onglet Actions -->
+        <mat-tab label="Actions">
+          <div class="form-section">
+            <div class="section-header">
+              <h3>Actions de la carte</h3>
+              <button mat-raised-button color="primary" (click)="addAction()">
+                <mat-icon>add</mat-icon>
+                Ajouter une action
+              </button>
+            </div>
+
+            <div formArrayName="actions" class="actions-container">
+              <div *ngFor="let action of actionsArray.controls; let i = index"
+                   [formGroupName]="i" class="action-item">
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Action {{ i + 1 }}</mat-card-title>
+                    <button mat-icon-button color="warn" (click)="removeAction(i)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="form-row">
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>Nom de l'action</mat-label>
+                        <input matInput formControlName="name">
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>Coût</mat-label>
+                        <input matInput type="number" formControlName="cost" min="0">
+                      </mat-form-field>
+                    </div>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Description</mat-label>
+                      <textarea matInput formControlName="description" rows="2"></textarea>
+                    </mat-form-field>
+                    <div class="form-row">
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>Dégâts</mat-label>
+                        <input matInput type="number" formControlName="damage" min="0">
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>Soins</mat-label>
+                        <input matInput type="number" formControlName="healing" min="0">
+                      </mat-form-field>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+
+              <div *ngIf="actionsArray.length === 0" class="empty-state">
+                <mat-icon>sports_mma</mat-icon>
+                <p>Aucune action définie pour cette carte</p>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Onglet Conditions -->
+        <mat-tab label="Conditions">
+          <div class="form-section">
+            <div class="section-header">
+              <h3>Conditions de la carte</h3>
+              <button mat-raised-button color="accent" (click)="addCondition()">
+                <mat-icon>add</mat-icon>
+                Ajouter une condition
+              </button>
+            </div>
+
+            <div formArrayName="conditions" class="conditions-container">
+              <div *ngFor="let condition of conditionsArray.controls; let i = index"
+                   [formGroupName]="i" class="condition-item">
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Condition {{ i + 1 }}</mat-card-title>
+                    <button mat-icon-button color="warn" (click)="removeCondition(i)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="form-row">
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>Nom de la condition</mat-label>
+                        <input matInput formControlName="name">
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>Durée (tours)</mat-label>
+                        <input matInput type="number" formControlName="duration" min="1">
+                      </mat-form-field>
+                    </div>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Description</mat-label>
+                      <textarea matInput formControlName="description" rows="2"></textarea>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Effet</mat-label>
+                      <textarea matInput formControlName="effect" rows="2"></textarea>
+                    </mat-form-field>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+
+              <div *ngIf="conditionsArray.length === 0" class="empty-state">
+                <mat-icon>rule</mat-icon>
+                <p>Aucune condition définie pour cette carte</p>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Onglet Effets -->
+        <mat-tab label="Effets">
+          <div class="form-section">
+            <!-- Section Effets -->
+            <div class="effects-section">
+              <h3>Lier des effets à la carte</h3>
+              <p class="section-description">
+                Sélectionnez les effets à associer à cette carte. Chaque effet contient ses propres conditions et actions.
+              </p>
+
+              <div class="effects-list" *ngIf="availableEffects.length > 0">
+                <div class="list-container">
+                  <div *ngFor="let effect of availableEffects"
+                       class="list-item"
+                       [class.selected]="isEffectSelected(effect.id)"
+                       (click)="toggleEffectSelection(effect.id)">
+                    <div class="checkbox-wrapper" (click)="$event.stopPropagation()">
+                      <mat-checkbox [checked]="isEffectSelected(effect.id)"
+                                    (change)="toggleEffectSelection(effect.id)"></mat-checkbox>
+                    </div>
+                    <div class="effect-item">
+                      <div class="effect-header">
+                        <strong>{{ effect.effectName }}</strong>
+                      </div>
+                      <div class="effect-description">
+                        {{ effect.description }}
+                      </div>
+                      <div class="effect-meta" *ngIf="effect.conditionCards || effect.actions">
+                        <span class="meta-badge" *ngIf="effect.conditionCards">
+                          <mat-icon>rule</mat-icon>
+                          {{ effect.conditionCards.length }} condition(s)
+                        </span>
+                        <span class="meta-badge" *ngIf="effect.actions">
+                          <mat-icon>sports_mma</mat-icon>
+                          {{ effect.actions.length }} action(s)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="availableEffects.length === 0" class="empty-state">
+                <mat-icon>lightbulb</mat-icon>
+                <p>Aucun effet disponible. Créez d'abord des effets dans la section Effets.</p>
+              </div>
+
+              <div class="selection-summary" *ngIf="selectedEffectIds.length > 0">
+                <h4>Effets sélectionnés :</h4>
+                <div *ngFor="let effectId of selectedEffectIds" class="selected-effect-card">
+                  <div class="effect-header-summary">
+                    <strong>{{ getEffectName(effectId) }}</strong>
+                    <button mat-icon-button color="warn" (click)="toggleEffectSelection(effectId)" matTooltip="Retirer cet effet">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+
+                  <div class="effect-conditions-info">
+                    <p class="conditions-label">Conditions de cet effet :</p>
+                    <div class="conditions-badges">
+                      <span class="condition-badge" *ngFor="let condition of getEffectConditions(effectId)">
+                        {{ condition.nameCondition }}
+                      </span>
+                      <span class="no-conditions" *ngIf="getEffectConditions(effectId).length === 0">
+                        Aucune condition configurée
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Annuler</button>
+    <button mat-raised-button color="primary" (click)="onSave()"
+            [disabled]="cardForm.invalid">
+      {{ isEditMode ? 'Modifier' : 'Créer' }}
+    </button>
+  </mat-dialog-actions>
+</div>

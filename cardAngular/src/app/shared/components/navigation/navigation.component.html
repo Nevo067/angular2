@@ -1,0 +1,38 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <!-- Logo et titre -->
+    <div class="navbar-brand">
+      <div class="brand-icon">🃏</div>
+      <h1 class="brand-title">Card RPG Manager</h1>
+    </div>
+
+    <!-- Menu principal -->
+    <div class="navbar-menu">
+      <button *ngFor="let item of menuItems"
+              mat-button
+              class="nav-item"
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              [class]="'nav-' + item.color">
+        <span class="nav-label">{{ item.label }}</span>
+      </button>
+    </div>
+
+    <!-- Menu mobile -->
+    <button mat-icon-button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+      <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Menu mobile dropdown -->
+  <div class="mobile-menu" [class.open]="isMobileMenuOpen">
+    <button *ngFor="let item of menuItems"
+            mat-button
+            class="mobile-nav-item"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            (click)="closeMobileMenu()">
+      <span>{{ item.label }}</span>
+    </button>
+  </div>
+</nav>

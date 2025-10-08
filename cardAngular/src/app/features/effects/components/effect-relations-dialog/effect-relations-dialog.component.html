@@ -1,0 +1,123 @@
+<div class="effect-relations-dialog">
+  <h2 mat-dialog-title>Gérer les relations de l'effet</h2>
+
+  <div mat-dialog-content class="dialog-content">
+    <div class="effect-info">
+      <h3>{{ effect.effectName }}</h3>
+      <p>{{ effect.description }}</p>
+    </div>
+
+    <mat-tab-group>
+      <!-- Onglet Conditions -->
+      <mat-tab label="Conditions">
+        <div class="tab-content">
+          <div class="section-header">
+            <h4>Conditions associées ({{ selectedConditionIds.length }})</h4>
+            <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loading">
+              <mat-icon>save</mat-icon>
+              Sauvegarder
+            </button>
+          </div>
+
+          <div class="conditions-grid">
+            <div class="condition-item" *ngFor="let condition of allConditions">
+              <mat-checkbox
+                [checked]="isConditionSelected(condition.id)"
+                (change)="onConditionToggle(condition.id)">
+                {{ condition.nameCondition }}
+              </mat-checkbox>
+              <p class="condition-description">{{ condition.description }}</p>
+              <div class="condition-actions">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="onAddCondition(condition.id)"
+                  [disabled]="loading || isConditionSelected(condition.id)"
+                  matTooltip="Ajouter cette condition">
+                  <mat-icon>add</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="onRemoveCondition(condition.id)"
+                  [disabled]="loading || !isConditionSelected(condition.id)"
+                  matTooltip="Supprimer cette condition">
+                  <mat-icon>remove</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="allConditions.length === 0" class="no-data">
+            <mat-icon>info</mat-icon>
+            <p>Aucune condition disponible</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Onglet Actions -->
+      <mat-tab label="Actions">
+        <div class="tab-content">
+          <div class="section-header">
+            <h4>Actions associées ({{ selectedActionIds.length }})</h4>
+            <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loading">
+              <mat-icon>save</mat-icon>
+              Sauvegarder
+            </button>
+          </div>
+
+          <div class="actions-grid">
+            <div class="action-item" *ngFor="let action of allActions">
+              <mat-checkbox
+                [checked]="isActionSelected(action.id)"
+                (change)="onActionToggle(action.id)">
+                {{ action.actionName }}
+              </mat-checkbox>
+              <p class="action-description">{{ action.description }}</p>
+              <div class="action-actions">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="onAddAction(action.id)"
+                  [disabled]="loading || isActionSelected(action.id)"
+                  matTooltip="Ajouter cette action">
+                  <mat-icon>add</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="onRemoveAction(action.id)"
+                  [disabled]="loading || !isActionSelected(action.id)"
+                  matTooltip="Supprimer cette action">
+                  <mat-icon>remove</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="allActions.length === 0" class="no-data">
+            <mat-icon>info</mat-icon>
+            <p>Aucune action disponible</p>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="onCancel()" [disabled]="loading">
+      <mat-icon>cancel</mat-icon>
+      Annuler
+    </button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loading">
+      <mat-icon>save</mat-icon>
+      Sauvegarder toutes les relations
+    </button>
+  </div>
+
+  <!-- Indicateur de chargement -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement en cours...</p>
+  </div>
+</div>
