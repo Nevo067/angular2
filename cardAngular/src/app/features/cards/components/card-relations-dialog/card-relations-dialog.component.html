@@ -1,0 +1,100 @@
+<div class="card-relations-dialog">
+  <h2 mat-dialog-title>Gérer les effets de la carte</h2>
+
+  <div mat-dialog-content class="dialog-content">
+    <!-- Informations de la carte -->
+    <div class="card-info">
+      <div class="card-image" *ngIf="card.imageUrl">
+        <img [src]="card.imageUrl" [alt]="card.name" />
+      </div>
+      <div class="card-details">
+        <h3>{{ card.name }}</h3>
+        <div class="card-stats">
+          <span class="stat-chip monster-type">{{ card.monsterType }}</span>
+          <span class="stat-chip element-type">{{ card.elementType }}</span>
+          <span class="stat-chip">ATK: {{ card.attackPoints }}</span>
+          <span class="stat-chip">DEF: {{ card.defensePoints }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des effets -->
+    <div class="effects-section">
+      <div class="section-header">
+        <h4>Effets disponibles ({{ selectedEffectIds.length }} sélectionné(s))</h4>
+        <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loading">
+          <mat-icon>save</mat-icon>
+          Sauvegarder
+        </button>
+      </div>
+
+      <div class="effects-grid">
+        <div class="effect-item" *ngFor="let effect of allEffects" 
+             [class.selected]="isEffectSelected(effect.id)">
+          <div class="effect-header">
+            <mat-checkbox
+              [checked]="isEffectSelected(effect.id)"
+              (change)="onEffectToggle(effect.id)"
+              [disabled]="loading">
+              <strong>{{ effect.effectName }}</strong>
+            </mat-checkbox>
+            <div class="effect-actions">
+              <button
+                mat-icon-button
+                color="primary"
+                (click)="onAddEffect(effect.id)"
+                [disabled]="loading || isEffectSelected(effect.id)"
+                matTooltip="Ajouter cet effet">
+                <mat-icon>add</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="onRemoveEffect(effect.id)"
+                [disabled]="loading || !isEffectSelected(effect.id)"
+                matTooltip="Supprimer cet effet">
+                <mat-icon>remove</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <p class="effect-description">{{ effect.description }}</p>
+
+          <div class="effect-details">
+            <span class="detail-badge conditions">
+              <mat-icon>rule</mat-icon>
+              {{ getEffectConditionsCount(effect) }} condition(s)
+            </span>
+            <span class="detail-badge actions">
+              <mat-icon>play_arrow</mat-icon>
+              {{ getEffectActionsCount(effect) }} action(s)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="allEffects.length === 0 && !loading" class="no-data">
+        <mat-icon>info</mat-icon>
+        <p>Aucun effet disponible</p>
+      </div>
+    </div>
+  </div>
+
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="onCancel()" [disabled]="loading">
+      <mat-icon>cancel</mat-icon>
+      Annuler
+    </button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loading">
+      <mat-icon>save</mat-icon>
+      Sauvegarder tous les changements
+    </button>
+  </div>
+
+  <!-- Indicateur de chargement -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement en cours...</p>
+  </div>
+</div>
+

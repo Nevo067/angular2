@@ -68,6 +68,21 @@ export class CardService extends BaseApiService {
   }
 
   /**
+   * Retire un effet d'une carte
+   */
+  removeEffectFromCard(cardId: number, effectId: number): Observable<Card> {
+    return this.delete<Card>(`${this.endpoint}/${cardId}/effects/${effectId}`);
+  }
+
+  /**
+   * Remplace tous les effets d'une carte
+   */
+  replaceCardEffects(cardId: number, effectIds: number[]): Observable<Card> {
+    console.log(`🔄 Remplacement des effets pour la carte ${cardId}:`, effectIds);
+    return this.put<Card>(`${this.endpoint}/${cardId}/replaceEffects`, effectIds);
+  }
+
+  /**
    * Recherche des cartes par nom
    */
   searchCardsByName(name: string): Observable<Card[]> {

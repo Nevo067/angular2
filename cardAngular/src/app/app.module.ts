@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { CardListComponent } from './features/cards/components/card-list/card-list.component';
 import { CardEditDialogComponent } from './features/cards/components/card-edit-dialog/card-edit-dialog.component';
+import { CardRelationsDialogComponent } from './features/cards/components/card-relations-dialog/card-relations-dialog.component';
 import { ActionListComponent } from './features/actions/components/action-list/action-list.component';
 import { ActionEditDialogComponent } from './features/actions/components/action-edit-dialog/action-edit-dialog.component';
 import { ConditionListComponent } from './features/conditions/components/condition-list/condition-list.component';
@@ -50,6 +51,7 @@ import { DataTableComponent } from './shared/components/data-table/data-table.co
     AppComponent,
     CardListComponent,
     CardEditDialogComponent,
+    CardRelationsDialogComponent,
     ActionListComponent,
     ActionEditDialogComponent,
     ConditionListComponent,

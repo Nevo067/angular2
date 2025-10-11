@@ -10,6 +10,7 @@ import { MonsterType, ElementType } from '../../../../core/enums';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
 import { CardEditDialogComponent } from '../card-edit-dialog/card-edit-dialog.component';
+import { CardRelationsDialogComponent } from '../card-relations-dialog/card-relations-dialog.component';
 
 @Component({
   selector: 'app-card-list',
@@ -112,6 +113,13 @@ export class CardListComponent implements OnInit {
     ],
     actions: [
       {
+        key: 'relations',
+        label: 'Gérer les effets',
+        icon: 'link',
+        color: 'accent',
+        tooltip: 'Gérer les relations avec les effets'
+      },
+      {
         key: 'edit',
         label: 'Modifier',
         icon: 'edit_note',
@@ -198,6 +206,9 @@ export class CardListComponent implements OnInit {
     const { action, row } = event;
 
     switch (action) {
+      case 'relations':
+        this.openCardRelationsDialog(row);
+        break;
       case 'edit':
         this.editCard(row);
         break;
@@ -260,6 +271,23 @@ export class CardListComponent implements OnInit {
       if (result) {
         console.log('Données du dialog:', result);
         this.saveCard(result);
+      }
+    });
+  }
+
+  openCardRelationsDialog(card: Card): void {
+    console.log('Ouvrir le dialogue de relations pour la carte:', card);
+    const dialogRef = this.dialog.open(CardRelationsDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      data: { card: card },
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Relations mises à jour, rechargement de la liste');
+        this.loadCards();
       }
     });
   }
