@@ -26,12 +26,11 @@ export class CardListComponent implements OnInit {
   tableConfig: TableConfig<Card> = {
     columns: [
       {
-        key: 'image',
+        key: 'imageUrl',
         label: 'Image',
         type: 'image',
         sortable: false,
-        width: '100px',
-        formatter: (value: any, row: any) => row.imageUrl || null
+        width: '180px'
       },
       {
         key: 'id',
@@ -103,12 +102,6 @@ export class CardListComponent implements OnInit {
         type: 'number',
         sortable: true,
         align: 'center'
-      },
-      {
-        key: 'imageUrl',
-        label: 'Image',
-        type: 'image',
-        width: '80px'
       }
     ],
     actions: [

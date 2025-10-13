@@ -158,16 +158,13 @@ export class CardService extends BaseApiService {
     }
 
     // Correction 3: Si l'URL est relative (commence par /api/), la convertir en URL absolue
+    // baseUrl contient déjà /api, donc on retire /api/ du début pour éviter la duplication
     if (fixedUrl.startsWith('/api/')) {
-      fixedUrl = fixedUrl.replace('/api/', `${this.baseUrl}/api/`);
+      // Retirer /api/ du début de l'URL et concaténer avec baseUrl
+      fixedUrl = `${this.baseUrl}${fixedUrl.substring(4)}`; // substring(4) retire '/api'
     }
 
-    // Correction 4: Corriger l'endpoint des images si nécessaire
-    // Remplacer /api/files/images/ par /api/files/ si c'est le cas
-    if (fixedUrl.includes('/api/files/images/')) {
-      fixedUrl = fixedUrl.replace('/api/files/images/', '/api/files/');
-    }
-
+    console.log('🖼️ URL image corrigée:', imageUrl, '→', fixedUrl);
     return fixedUrl;
   }
 
