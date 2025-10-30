@@ -7,3 +7,7 @@ export * from './file.model';
 
 // Modèles API
 export * from './api-response.model';
+export * from './parameter-definition.model';
+export * from './enum-option.model';
+export * from './action-parameter-value.model';
+export * from './condition-parameter-value.model';

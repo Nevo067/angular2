@@ -1,0 +1,16 @@
+<div class="page" *ngIf="!loading; else loadingTpl">
+  <h2>Paramètres de l'action #{{ actionId }}</h2>
+  <app-parameter-editor
+    [ownerType]="'action'"
+    [ownerId]="actionId"
+    [definitions]="definitions"
+    [currentValues]="values"
+    (save)="onSave($event)">
+  </app-parameter-editor>
+</div>
+
+<ng-template #loadingTpl>
+  <p>Chargement...</p>
+  </ng-template>
+
+

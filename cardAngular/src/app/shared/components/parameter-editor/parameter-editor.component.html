@@ -1,0 +1,28 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div formArrayName="items">
+    <div *ngFor="let group of items.controls; let i = index" [formGroupName]="i" class="param-row">
+      <label class="param-label">
+        <input type="checkbox" formControlName="enabled" (change)="onToggle(i, definitions[i])" />
+        {{ definitions[i]?.label }}
+        <span class="type-badge">{{ definitions[i]?.valueType }}</span>
+      </label>
+
+      <ng-container [ngSwitch]="definitions[i]?.valueType">
+        <input *ngSwitchCase="'STRING'" formControlName="valueString" type="text" placeholder="Valeur texte" />
+        <input *ngSwitchCase="'NUMBER'" formControlName="valueNumber" type="number" step="any" placeholder="Valeur numérique" />
+        <select *ngSwitchCase="'ENUM'" formControlName="enumOptionCode" (click)="loadOptions(definitions[i]?.code)">
+          <option [ngValue]="null">-- Sélectionner --</option>
+          <option *ngFor="let opt of optionsByCode.get(definitions[i]?.code) || []" [value]="opt.code">
+            {{ opt.label }}
+          </option>
+        </select>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="submit">Enregistrer</button>
+  </div>
+</form>
+
+

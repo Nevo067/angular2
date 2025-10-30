@@ -19,6 +19,7 @@ import { EffectDetailsDialogComponent } from './features/effects/components/effe
 import { EffectRelationsDialogComponent } from './features/effects/components/effect-relations-dialog/effect-relations-dialog.component';
 import { ConditionRelationsDialogComponent } from './features/conditions/components/condition-relations-dialog/condition-relations-dialog.component';
 import { NavigationComponent } from './shared/components/navigation/navigation.component';
+import { ParameterEditorComponent } from './shared/components/parameter-editor/parameter-editor.component';
 
 // Angular Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -45,6 +46,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 // Shared Components
 import { DataTableComponent } from './shared/components/data-table/data-table.component';
+import { ActionParametersPageComponent } from './features/actions/components/action-parameters-page/action-parameters-page.component';
+import { ConditionParametersPageComponent } from './features/conditions/components/condition-parameters-page/condition-parameters-page.component';
 
 @NgModule({
   declarations: [
@@ -62,7 +65,10 @@ import { DataTableComponent } from './shared/components/data-table/data-table.co
     EffectRelationsDialogComponent,
     ConditionRelationsDialogComponent,
     NavigationComponent,
-    DataTableComponent
+    DataTableComponent,
+    ParameterEditorComponent,
+    ActionParametersPageComponent
+    ,ConditionParametersPageComponent
   ],
   imports: [
     BrowserModule,

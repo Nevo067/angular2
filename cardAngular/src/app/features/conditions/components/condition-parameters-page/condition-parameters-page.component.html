@@ -1,0 +1,16 @@
+<div class="page" *ngIf="!loading; else loadingTpl">
+  <h2>Paramètres de la condition #{{ conditionId }}</h2>
+  <app-parameter-editor
+    [ownerType]="'condition'"
+    [ownerId]="conditionId"
+    [definitions]="definitions"
+    [currentValues]="values"
+    (save)="onSave($event)">
+  </app-parameter-editor>
+</div>
+
+<ng-template #loadingTpl>
+  <p>Chargement...</p>
+</ng-template>
+
+
