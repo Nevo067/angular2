@@ -17,13 +17,14 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Description</mat-label>
+        <mat-label>Description (optionnel)</mat-label>
         <textarea matInput formControlName="description" rows="3"
-                 placeholder="Décrivez l'action"></textarea>
-        <mat-error *ngIf="hasError('description', 'required')">
-          {{ getErrorMessage('description') }}
-        </mat-error>
+                 placeholder="Décrivez l'action (optionnel)"></textarea>
       </mat-form-field>
+
+      <mat-checkbox formControlName="configureParametersAfterSave">
+        Configurer des paramètres après enregistrement
+      </mat-checkbox>
     </form>
   </mat-dialog-content>
 

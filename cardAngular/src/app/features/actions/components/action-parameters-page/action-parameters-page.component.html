@@ -1,16 +1,54 @@
-<div class="page" *ngIf="!loading; else loadingTpl">
-  <h2>Paramètres de l'action #{{ actionId }}</h2>
-  <app-parameter-editor
-    [ownerType]="'action'"
-    [ownerId]="actionId"
-    [definitions]="definitions"
-    [currentValues]="values"
-    (save)="onSave($event)">
-  </app-parameter-editor>
+<div class="parameters-page-container" *ngIf="!loading; else loadingTpl">
+  <div class="header">
+    <div class="title-section">
+      <h2>Configuration des paramètres</h2>
+      <p class="subtitle">Action #{{ actionId }}</p>
+    </div>
+    <div class="actions-section">
+      <button mat-raised-button color="primary" (click)="openNewDefinitionDialog()">
+        <mat-icon>add</mat-icon>
+        Nouvelle définition de paramètre
+      </button>
+      <a mat-button [routerLink]="['/actions']" class="back-link">
+        <mat-icon>arrow_back</mat-icon>
+        Retour aux actions
+      </a>
+    </div>
+  </div>
+
+  <div class="content-section" *ngIf="definitions.length > 0; else noDefinitions">
+    <div class="info-box">
+      <mat-icon>info</mat-icon>
+      <p>Cochez les paramètres que vous souhaitez configurer pour cette action, puis saisissez leurs valeurs.</p>
+    </div>
+
+    <app-parameter-editor
+      [ownerType]="'action'"
+      [ownerId]="actionId"
+      [definitions]="definitions"
+      [currentValues]="values"
+      (save)="onSave($event)">
+    </app-parameter-editor>
+  </div>
+
+  <ng-template #noDefinitions>
+    <div class="empty-state">
+      <mat-icon class="empty-icon">settings_suggest</mat-icon>
+      <h3>Aucune définition de paramètre disponible</h3>
+      <p>Commencez par créer une définition de paramètre pour configurer cette action.</p>
+      <button mat-raised-button color="primary" (click)="openNewDefinitionDialog()">
+        <mat-icon>add</mat-icon>
+        Créer ma première définition
+      </button>
+    </div>
+  </ng-template>
 </div>
 
 <ng-template #loadingTpl>
-  <p>Chargement...</p>
-  </ng-template>
+  <div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement des paramètres...</p>
+  </div>
+</ng-template>
 
 

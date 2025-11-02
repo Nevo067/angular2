@@ -55,6 +55,10 @@ export interface TableConfig<T = any> {
     enabled: boolean;
     globalFilter?: boolean;
   };
+  expandable?: {
+    enabled: boolean;
+    expandOnClick?: boolean;
+  };
   loading?: boolean;
   emptyMessage?: string;
 }

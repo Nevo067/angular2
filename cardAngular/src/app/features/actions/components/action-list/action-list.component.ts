@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { ActionCardService } from '../../../../core/services';
 import { ActionCard } from '../../../../core/models';
 import { DataTableComponent } from '../../../../shared/components';
@@ -41,6 +42,13 @@ export class ActionListComponent implements OnInit {
     ],
     actions: [
       {
+        key: 'parameters',
+        label: 'Paramètres',
+        icon: 'tune',
+        color: 'accent',
+        tooltip: 'Configurer les paramètres'
+      },
+      {
         key: 'edit',
         label: 'Modifier',
         icon: 'edit_note',
@@ -55,6 +63,10 @@ export class ActionListComponent implements OnInit {
         tooltip: 'Supprimer l\'action'
       }
     ],
+    expandable: {
+      enabled: true,
+      expandOnClick: false
+    },
     pagination: {
       pageSize: 10,
       pageSizeOptions: [5, 10, 25, 50],
@@ -80,7 +92,8 @@ export class ActionListComponent implements OnInit {
 
   constructor(
     private actionCardService: ActionCardService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -108,12 +121,21 @@ export class ActionListComponent implements OnInit {
     const { action, row } = event;
 
     switch (action) {
+      case 'parameters':
+        this.navigateToParameters(row);
+        break;
       case 'edit':
         this.editAction(row);
         break;
       case 'delete':
         this.deleteAction(row);
         break;
+    }
+  }
+
+  navigateToParameters(action: ActionCard): void {
+    if (action.id) {
+      this.router.navigate(['/actions', action.id, 'parameters']);
     }
   }
 
@@ -191,6 +213,10 @@ export class ActionListComponent implements OnInit {
         next: (newAction) => {
           console.log('Action créée avec succès:', newAction);
           this.loadActions();
+          if (actionData.configureParametersAfterSave && newAction?.id) {
+            // rediriger vers la page des paramètres de l'action
+            window.location.href = `/actions/${newAction.id}/parameters`;
+          }
         },
         error: (error: any) => {
           console.error('Erreur lors de la création:', error);

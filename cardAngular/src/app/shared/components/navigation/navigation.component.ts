@@ -37,6 +37,13 @@ export class NavigationComponent {
       route: '/effects',
       color: 'warn',
       description: 'Gérer les effets spéciaux'
+    },
+    {
+      label: 'Paramètres',
+      icon: 'tune',
+      route: '/parameters',
+      color: 'info',
+      description: 'Gérer les définitions de paramètres'
     }
   ];
 

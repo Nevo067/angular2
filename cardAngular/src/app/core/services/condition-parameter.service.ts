@@ -14,8 +14,8 @@ export class ConditionParameterService extends BaseApiService {
     return this.post<ConditionParameterValueDTO>(`/api/conditions/${conditionId}/parameters`, payload);
   }
 
-  delete(conditionId: number, id: number): Observable<any> {
-    return this.delete<any>(`/api/conditions/${conditionId}/parameters/${id}`);
+  remove(conditionId: number, id: number): Observable<any> {
+    return super.delete(`/api/conditions/${conditionId}/parameters/${id}`);
   }
 }
 

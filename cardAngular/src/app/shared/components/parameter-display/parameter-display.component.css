@@ -1,0 +1,141 @@
+.parameter-display-container {
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  min-height: 60px;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.error-state {
+  color: #d32f2f;
+}
+
+.error-state mat-icon {
+  color: #d32f2f;
+}
+
+.empty-state {
+  color: #999;
+}
+
+.empty-state mat-icon {
+  color: #999;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.parameters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.parameter-item {
+  background-color: white;
+  border-radius: 6px;
+  padding: 12px;
+  border-left: 4px solid #2196f3;
+  transition: all 0.2s ease;
+}
+
+.parameter-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateX(2px);
+}
+
+.parameter-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.type-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #666;
+}
+
+.parameter-label {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.type-chip-primary {
+  background-color: #e3f2fd !important;
+  color: #1976d2 !important;
+  font-size: 11px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  padding: 0 8px !important;
+}
+
+.type-chip-accent {
+  background-color: #f3e5f5 !important;
+  color: #7b1fa2 !important;
+  font-size: 11px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  padding: 0 8px !important;
+}
+
+.type-chip-warn {
+  background-color: #fff3e0 !important;
+  color: #e65100 !important;
+  font-size: 11px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  padding: 0 8px !important;
+}
+
+.parameter-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 26px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.code {
+  font-weight: 600;
+  color: #0277bd;
+  font-size: 13px;
+}
+
+.separator {
+  color: #999;
+  font-weight: bold;
+}
+
+.value {
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: #e8f5e9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Animation pour le loading spinner */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

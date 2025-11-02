@@ -72,3 +72,48 @@ body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
   color: var(--text-primary);
 }
+
+/* Styles personnalisés pour les snackbars (notifications) */
+.success-snackbar {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4) !important;
+}
+
+.success-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+}
+
+.error-snackbar {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 12px rgba(235, 51, 73, 0.4) !important;
+}
+
+.error-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+}
+
+.warning-snackbar {
+  background: linear-gradient(135deg, #f09819 0%, #edde5d 100%) !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 12px rgba(240, 152, 25, 0.4) !important;
+}
+
+.warning-snackbar .mat-simple-snackbar-action {
+  color: #333 !important;
+}
+
+.info-snackbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+}
+
+.info-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+}

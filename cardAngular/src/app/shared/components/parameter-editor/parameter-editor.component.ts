@@ -1,14 +1,18 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActionParameterValueDTO, ConditionParameterValueDTO, EnumOptionDTO, ParameterDefinitionDTO, ParameterValueType } from '../../../core/models';
 import { ParameterDefinitionService } from '../../../core/services';
+import { ReactiveFormsModule } from '@angular/forms';
 
 type OwnerType = 'action' | 'condition';
 
 @Component({
   selector: 'app-parameter-editor',
   templateUrl: './parameter-editor.component.html',
-  styleUrls: ['./parameter-editor.component.css']
+  styleUrls: ['./parameter-editor.component.css'],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule]
 })
 export class ParameterEditorComponent implements OnInit {
   @Input() ownerType: OwnerType = 'action';

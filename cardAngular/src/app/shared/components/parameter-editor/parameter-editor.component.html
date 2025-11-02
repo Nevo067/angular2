@@ -1,18 +1,35 @@
-<form [formGroup]="form" (ngSubmit)="submit()">
-  <div formArrayName="items">
+<form [formGroup]="form" (ngSubmit)="submit()" class="parameter-editor-form">
+  <div formArrayName="items" class="parameters-list">
     <div *ngFor="let group of items.controls; let i = index" [formGroupName]="i" class="param-row">
-      <label class="param-label">
-        <input type="checkbox" formControlName="enabled" (change)="onToggle(i, definitions[i])" />
+      <div class="param-checkbox-wrapper">
+        <input type="checkbox" formControlName="enabled" (change)="onToggle(i, definitions[i])" id="param-{{i}}" />
+      </div>
+      <label class="param-label" for="param-{{i}}">
         {{ definitions[i]?.label }}
         <span class="type-badge">{{ definitions[i]?.valueType }}</span>
       </label>
 
       <ng-container [ngSwitch]="definitions[i]?.valueType">
-        <input *ngSwitchCase="'STRING'" formControlName="valueString" type="text" placeholder="Valeur texte" />
-        <input *ngSwitchCase="'NUMBER'" formControlName="valueNumber" type="number" step="any" placeholder="Valeur numérique" />
-        <select *ngSwitchCase="'ENUM'" formControlName="enumOptionCode" (click)="loadOptions(definitions[i]?.code)">
+        <input *ngSwitchCase="'STRING'" 
+               formControlName="valueString" 
+               type="text" 
+               placeholder="Valeur texte"
+               class="param-input"
+               [disabled]="!group.get('enabled')?.value" />
+        <input *ngSwitchCase="'NUMBER'" 
+               formControlName="valueNumber" 
+               type="number" 
+               step="any" 
+               placeholder="Valeur numérique"
+               class="param-input"
+               [disabled]="!group.get('enabled')?.value" />
+        <select *ngSwitchCase="'ENUM'" 
+                formControlName="enumOptionCode" 
+                (click)="loadOptions(definitions[i]?.code || '')"
+                class="param-select"
+                [disabled]="!group.get('enabled')?.value">
           <option [ngValue]="null">-- Sélectionner --</option>
-          <option *ngFor="let opt of optionsByCode.get(definitions[i]?.code) || []" [value]="opt.code">
+          <option *ngFor="let opt of optionsByCode.get(definitions[i]?.code || '') || []" [value]="opt.code">
             {{ opt.label }}
           </option>
         </select>
@@ -21,7 +38,7 @@
   </div>
 
   <div class="actions">
-    <button type="submit">Enregistrer</button>
+    <button type="submit" class="save-button">Enregistrer</button>
   </div>
 </form>
 

@@ -1,0 +1,33 @@
+<div class="parameter-display-container">
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span>Chargement...</span>
+  </div>
+
+  <div *ngIf="!loading && error" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <span>Erreur lors du chargement des paramètres</span>
+  </div>
+
+  <div *ngIf="!loading && !error && parameters.length === 0" class="empty-state">
+    <mat-icon>settings_suggest</mat-icon>
+    <span>Aucun paramètre configuré</span>
+  </div>
+
+  <div *ngIf="!loading && !error && parameters.length > 0" class="parameters-list">
+    <div class="parameter-item" *ngFor="let param of parameters">
+      <div class="parameter-header">
+        <mat-icon class="type-icon">{{ getTypeIcon(param.valueType) }}</mat-icon>
+        <span class="parameter-label">{{ param.label }}</span>
+        <mat-chip [class]="'type-chip-' + getTypeColor(param.valueType)">
+          {{ param.valueType }}
+        </mat-chip>
+      </div>
+      <div class="parameter-value">
+        <span class="code">{{ param.code }}</span>
+        <span class="separator">:</span>
+        <span class="value">{{ param.displayValue }}</span>
+      </div>
+    </div>
+  </div>
+</div>

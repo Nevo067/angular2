@@ -14,8 +14,8 @@ export class ActionParameterService extends BaseApiService {
     return this.post<ActionParameterValueDTO>(`/api/actions/${actionId}/parameters`, payload);
   }
 
-  delete(actionId: number, id: number): Observable<any> {
-    return this.delete<any>(`/api/actions/${actionId}/parameters/${id}`);
+  remove(actionId: number, id: number): Observable<any> {
+    return super.delete(`/api/actions/${actionId}/parameters/${id}`);
   }
 }
 

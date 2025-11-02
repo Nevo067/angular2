@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { ConditionCardService } from '../../../../core/services';
 import { ConditionCard } from '../../../../core/models';
 import { DataTableComponent } from '../../../../shared/components';
@@ -54,6 +55,13 @@ export class ConditionListComponent implements OnInit {
     ],
     actions: [
       {
+        key: 'parameters',
+        label: 'Paramètres',
+        icon: 'tune',
+        color: 'accent',
+        tooltip: 'Configurer les paramètres'
+      },
+      {
         key: 'manageRelations',
         label: 'Gérer relations',
         icon: 'link',
@@ -75,6 +83,10 @@ export class ConditionListComponent implements OnInit {
         tooltip: 'Supprimer la condition'
       }
     ],
+    expandable: {
+      enabled: true,
+      expandOnClick: false
+    },
     pagination: {
       pageSize: 10,
       pageSizeOptions: [5, 10, 25, 50],
@@ -100,7 +112,8 @@ export class ConditionListComponent implements OnInit {
 
   constructor(
     private conditionCardService: ConditionCardService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -229,6 +242,9 @@ export class ConditionListComponent implements OnInit {
     const { action, row } = event;
 
     switch (action) {
+      case 'parameters':
+        this.navigateToParameters(row);
+        break;
       case 'manageRelations':
         this.manageConditionRelations(row);
         break;
@@ -238,6 +254,12 @@ export class ConditionListComponent implements OnInit {
       case 'delete':
         this.deleteCondition(row);
         break;
+    }
+  }
+
+  navigateToParameters(condition: ConditionCard): void {
+    if (condition.id) {
+      this.router.navigate(['/conditions', condition.id, 'parameters']);
     }
   }
 

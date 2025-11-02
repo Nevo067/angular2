@@ -16,5 +16,12 @@
     (selectionChange)="onSelectionChange($event)"
     (pageChange)="onPageChange($event)"
     (sortChange)="onSortChange($event)">
+    
+    <ng-template #expandedRow let-row>
+      <app-parameter-display 
+        [ownerId]="row.id" 
+        [ownerType]="'condition'">
+      </app-parameter-display>
+    </ng-template>
   </app-data-table>
 </div>

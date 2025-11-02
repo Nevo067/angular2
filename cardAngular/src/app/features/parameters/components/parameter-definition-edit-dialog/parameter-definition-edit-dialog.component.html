@@ -1,0 +1,81 @@
+<div class="definition-edit-dialog">
+  <h2 mat-dialog-title>
+    {{ isEditMode ? 'Modifier le paramètre' : 'Nouveau paramètre' }}
+  </h2>
+
+  <mat-dialog-content>
+    <div class="info-box" style="margin-bottom: 16px;">
+      <mat-icon>lightbulb</mat-icon>
+      <span>Le <strong>Code</strong> est l'identifiant technique unique (MAJUSCULES), le <strong>Libellé</strong> est le nom lisible.</span>
+    </div>
+
+    <form [formGroup]="definitionForm" class="definition-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Code</mat-label>
+        <input matInput formControlName="code" placeholder="PLAYER_LEVEL" [readonly]="isEditMode">
+        <mat-hint>Majuscules uniquement (ex: PLAYER_LEVEL, STATUS, MAX_HP)</mat-hint>
+        <mat-error *ngIf="hasError('code', 'required')">
+          {{ getErrorMessage('code') }}
+        </mat-error>
+        <mat-error *ngIf="hasError('code', 'minlength')">
+          {{ getErrorMessage('code') }}
+        </mat-error>
+        <mat-error *ngIf="hasError('code', 'pattern')">
+          {{ getErrorMessage('code') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Libellé</mat-label>
+        <input matInput formControlName="label" placeholder="Niveau du joueur">
+        <mat-hint>Nom d'affichage lisible du paramètre</mat-hint>
+        <mat-error *ngIf="hasError('label', 'required')">
+          {{ getErrorMessage('label') }}
+        </mat-error>
+        <mat-error *ngIf="hasError('label', 'minlength')">
+          {{ getErrorMessage('label') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Type de valeur</mat-label>
+        <mat-select formControlName="valueType" (selectionChange)="onValueTypeChange()">
+          <mat-option value="STRING">Texte</mat-option>
+          <mat-option value="NUMBER">Nombre</mat-option>
+          <mat-option value="ENUM">Énumération</mat-option>
+        </mat-select>
+        <mat-error *ngIf="hasError('valueType', 'required')">
+          {{ getErrorMessage('valueType') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3" placeholder="Description du paramètre"></textarea>
+      </mat-form-field>
+
+      <div *ngIf="isEnum && isEditMode && options.length > 0" class="options-section">
+        <h4>Options disponibles</h4>
+        <div class="options-list">
+          <div *ngFor="let opt of options" class="option-item">
+            <mat-chip>{{ opt.label }}</mat-chip>
+          </div>
+        </div>
+        <p class="info-text">Pour ajouter/modifier des options, utilisez l'éditeur intégré (en développement)</p>
+      </div>
+
+      <div *ngIf="isEnum && !isEditMode" class="info-box">
+        <mat-icon>info</mat-icon>
+        <span>Vous pourrez ajouter des options après la création</span>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Annuler</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="definitionForm.invalid">
+      {{ isEditMode ? 'Modifier' : 'Créer' }}
+    </button>
+  </mat-dialog-actions>
+</div>
+

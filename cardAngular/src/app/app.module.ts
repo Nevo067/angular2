@@ -19,7 +19,8 @@ import { EffectDetailsDialogComponent } from './features/effects/components/effe
 import { EffectRelationsDialogComponent } from './features/effects/components/effect-relations-dialog/effect-relations-dialog.component';
 import { ConditionRelationsDialogComponent } from './features/conditions/components/condition-relations-dialog/condition-relations-dialog.component';
 import { NavigationComponent } from './shared/components/navigation/navigation.component';
-import { ParameterEditorComponent } from './shared/components/parameter-editor/parameter-editor.component';
+import { ParameterDefinitionListComponent } from './features/parameters/components/parameter-definition-list/parameter-definition-list.component';
+import { ParameterDefinitionEditDialogComponent } from './features/parameters/components/parameter-definition-edit-dialog/parameter-definition-edit-dialog.component';
 
 // Angular Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -46,6 +47,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 // Shared Components
 import { DataTableComponent } from './shared/components/data-table/data-table.component';
+import { ParameterEditorComponent } from './shared/components/parameter-editor/parameter-editor.component';
+import { ParameterDisplayComponent } from './shared/components/parameter-display/parameter-display.component';
 import { ActionParametersPageComponent } from './features/actions/components/action-parameters-page/action-parameters-page.component';
 import { ConditionParametersPageComponent } from './features/conditions/components/condition-parameters-page/condition-parameters-page.component';
 
@@ -66,9 +69,7 @@ import { ConditionParametersPageComponent } from './features/conditions/componen
     ConditionRelationsDialogComponent,
     NavigationComponent,
     DataTableComponent,
-    ParameterEditorComponent,
-    ActionParametersPageComponent
-    ,ConditionParametersPageComponent
+    ParameterDefinitionEditDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -97,7 +98,13 @@ import { ConditionParametersPageComponent } from './features/conditions/componen
     MatSelectModule,
     MatSnackBarModule,
     ReactiveFormsModule,
-    RouterModule
+    RouterModule,
+    // standalone components imported here
+    ParameterEditorComponent,
+    ParameterDisplayComponent,
+    ActionParametersPageComponent,
+    ConditionParametersPageComponent,
+    ParameterDefinitionListComponent
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -8,14 +8,14 @@
 
     <!-- Menu principal -->
     <div class="navbar-menu">
-      <button *ngFor="let item of menuItems"
-              mat-button
-              class="nav-item"
-              [routerLink]="item.route"
-              routerLinkActive="active"
-              [class]="'nav-' + item.color">
+      <a *ngFor="let item of menuItems"
+         mat-button
+         class="nav-item"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         [class]="'nav-' + item.color">
         <span class="nav-label">{{ item.label }}</span>
-      </button>
+      </a>
     </div>
 
     <!-- Menu mobile -->
@@ -26,13 +26,13 @@
 
   <!-- Menu mobile dropdown -->
   <div class="mobile-menu" [class.open]="isMobileMenuOpen">
-    <button *ngFor="let item of menuItems"
-            mat-button
-            class="mobile-nav-item"
-            [routerLink]="item.route"
-            routerLinkActive="active"
-            (click)="closeMobileMenu()">
+    <a *ngFor="let item of menuItems"
+       mat-button
+       class="mobile-nav-item"
+       [routerLink]="item.route"
+       routerLinkActive="active"
+       (click)="closeMobileMenu()">
       <span>{{ item.label }}</span>
-    </button>
+    </a>
   </div>
 </nav>

@@ -1,0 +1,47 @@
+<div class="parameter-list-container">
+  <div class="header">
+    <h2>Gestion des Paramètres</h2>
+    <button type="button" (click)="addDefinition()" class="add-button">
+      <span class="icon">+</span>
+      <span class="text">Nouveau Paramètre</span>
+    </button>
+  </div>
+
+  <div class="definitions-grid" *ngIf="!loading; else loadingTpl">
+    <div *ngFor="let def of definitions" class="definition-card">
+      <div class="card-header">
+        <div class="card-title">
+          <h3>{{ def.label }}</h3>
+          <span [class]="'type-badge ' + getValueTypeClass(def.valueType)">
+            {{ def.valueType }}
+          </span>
+        </div>
+        <div class="card-actions">
+          <button mat-icon-button (click)="editDefinition(def)" color="primary">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="deleteDefinition(def)" color="warn">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="code-label"><strong>Code:</strong> {{ def.code }}</p>
+        <p class="description" *ngIf="def.description">{{ def.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="loading-container">
+      <p>Chargement des définitions...</p>
+    </div>
+  </ng-template>
+
+  <div *ngIf="!loading && definitions.length === 0" class="empty-container">
+    <mat-icon>settings</mat-icon>
+    <p>Aucune définition de paramètre disponible</p>
+    <button mat-button (click)="addDefinition()">Créer une définition</button>
+  </div>
+</div>
+

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, AfterViewInit, ViewChild, ChangeDetectorRef, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, AfterViewInit, ViewChild, ChangeDetectorRef, SimpleChanges, TemplateRef, ContentChild } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
@@ -15,17 +15,26 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TableConfig, TableColumn, TableAction, TableState } from '../../models/table-config.model';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-data-table',
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.css'],
-  standalone: false
+  standalone: false,
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({ height: '0px', minHeight: '0', opacity: 0 })),
+      state('expanded', style({ height: '*', opacity: 1 })),
+      transition('expanded <=> collapsed', animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)'))
+    ])
+  ]
 })
 export class DataTableComponent<T = any> implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   @Input() config!: TableConfig<T>;
   @Input() data: T[] = [];
   @Input() loading = false;
+  @ContentChild('expandedRow') expandedRowTemplate?: TemplateRef<any>;
 
   @Output() actionClick = new EventEmitter<{ action: string; row: T; index: number }>();
   @Output() rowClick = new EventEmitter<T>();
@@ -40,6 +49,7 @@ export class DataTableComponent<T = any> implements OnInit, OnDestroy, AfterView
   displayedColumns: string[] = [];
   globalFilterControl = new FormControl('');
   selectedRows: T[] = [];
+  expandedRows = new Set<T>();
 
   private destroy$ = new Subject<void>();
   private tableState: TableState = {
@@ -89,6 +99,10 @@ export class DataTableComponent<T = any> implements OnInit, OnDestroy, AfterView
 
     if (this.config.selection?.enabled) {
       this.displayedColumns.unshift('select');
+    }
+
+    if (this.config.expandable?.enabled) {
+      this.displayedColumns.unshift('expand');
     }
 
     if (this.config.actions && this.config.actions.length > 0) {
@@ -280,4 +294,26 @@ export class DataTableComponent<T = any> implements OnInit, OnDestroy, AfterView
     }
     this.onSelectionChange(this.selectedRows);
   }
+
+  /** Toggle expansion of a row. */
+  toggleRow(row: T, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (this.expandedRows.has(row)) {
+      this.expandedRows.delete(row);
+    } else {
+      this.expandedRows.add(row);
+    }
+  }
+
+  /** Check if a row is expanded. */
+  isExpanded(row: T): boolean {
+    return this.expandedRows.has(row);
+  }
+
+  /** Function to determine if expanded row should be shown */
+  shouldShowExpandedRow = (index: number, row: T): boolean => {
+    return !!(this.config.expandable?.enabled && this.isExpanded(row));
+  };
 }

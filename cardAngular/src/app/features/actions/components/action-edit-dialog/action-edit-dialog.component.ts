@@ -32,7 +32,8 @@ export class ActionEditDialogComponent implements OnInit {
     this.actionForm = this.fb.group({
       id: [null],
       actionName: ['', [Validators.required, Validators.minLength(2)]],
-      description: ['', [Validators.required]]
+      description: [''],
+      configureParametersAfterSave: [true]
     });
   }
 

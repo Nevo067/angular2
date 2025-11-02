@@ -12,6 +12,16 @@
   <div class="table-wrapper">
     <mat-table [dataSource]="dataSource" class="data-table" matSort>
 
+      <!-- Colonne d'expansion -->
+      <ng-container matColumnDef="expand" *ngIf="config.expandable?.enabled">
+        <mat-header-cell *matHeaderCellDef style="width: 48px;"></mat-header-cell>
+        <mat-cell *matCellDef="let row" style="width: 48px;">
+          <button mat-icon-button (click)="toggleRow(row); $event.stopPropagation()">
+            <mat-icon>{{ isExpanded(row) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
       <!-- Colonne de sélection -->
       <ng-container matColumnDef="select" *ngIf="config.selection?.enabled">
         <mat-header-cell *matHeaderCellDef>
@@ -88,13 +98,29 @@
         </mat-cell>
       </ng-container>
 
+      <!-- Colonne d'expansion -->
+      <ng-container matColumnDef="expandedDetail" *ngIf="config.expandable?.enabled">
+        <mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length" class="expanded-detail-cell">
+          <div class="expanded-detail-content"
+               [@detailExpand]="isExpanded(row) ? 'expanded' : 'collapsed'">
+            <ng-container *ngTemplateOutlet="expandedRowTemplate; context: { $implicit: row }"></ng-container>
+          </div>
+        </mat-cell>
+      </ng-container>
+
       <!-- En-tête du tableau -->
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
 
       <!-- Lignes du tableau -->
       <mat-row *matRowDef="let row; columns: displayedColumns;"
-               (click)="onRowClick(row)"
+               (click)="config.expandable?.expandOnClick ? toggleRow(row) : onRowClick(row)"
+               [class.expanded-row]="isExpanded(row)"
                class="table-row">
+      </mat-row>
+
+      <!-- Ligne d'expansion -->
+      <mat-row *matRowDef="let row; columns: ['expandedDetail']; when: shouldShowExpandedRow"
+               class="expanded-detail-row">
       </mat-row>
 
       <!-- Message vide -->
@@ -111,14 +137,14 @@
 
   <!-- Pagination -->
   <mat-paginator *ngIf="config.pagination"
-                 [pageSize]="config.pagination.pageSize"
-                 [pageSizeOptions]="config.pagination.pageSizeOptions"
-                 [showFirstLastButtons]="config.pagination.showFirstLastButtons"
+                 [pageSize]="config.pagination?.pageSize"
+                 [pageSizeOptions]="config.pagination?.pageSizeOptions || []"
+                 [showFirstLastButtons]="config.pagination?.showFirstLastButtons"
                  (page)="onPageChange($event)">
   </mat-paginator>
 
   <!-- Indicateur de chargement -->
   <div class="loading-overlay" *ngIf="loading">
-    <mat-spinner diameter="50"></mat-spinner>
+    <div class="simple-spinner">Chargement...</div>
   </div>
 </div>
