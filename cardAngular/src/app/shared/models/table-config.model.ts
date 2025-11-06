@@ -9,6 +9,7 @@ export interface TableColumn {
   filterable?: boolean;
   width?: string;
   align?: 'left' | 'center' | 'right';
+  sticky?: boolean | 'start' | 'end';
   formatter?: (value: any, row: any) => string;
   chipConfig?: {
     color: string;

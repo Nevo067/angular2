@@ -41,7 +41,7 @@
       </ng-container>
 
       <!-- Colonnes dynamiques -->
-      <ng-container *ngFor="let column of config.columns" [matColumnDef]="column.key">
+      <ng-container *ngFor="let column of config.columns" [matColumnDef]="column.key" [sticky]="column.sticky === 'start' || column.sticky === true" [stickyEnd]="column.sticky === 'end'">
         <mat-header-cell *matHeaderCellDef [mat-sort-header]="column.sortable ? column.key : ''">
           {{ column.label }}
         </mat-header-cell>
