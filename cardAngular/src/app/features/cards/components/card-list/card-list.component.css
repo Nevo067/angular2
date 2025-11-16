@@ -23,6 +23,58 @@
   font-size: 1.5rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.export-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--accent-color, #ff4081);
+  color: var(--text-white, #fff);
+  border: 2px solid var(--accent-color, #ff4081);
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: inherit;
+  text-decoration: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.export-button:hover:not(:disabled) {
+  background-color: var(--accent-light, #ff79b0);
+  border-color: var(--accent-light, #ff79b0);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.export-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.export-button:focus {
+  outline: 2px solid var(--accent-light, #ff79b0);
+  outline-offset: 2px;
+}
+
+.export-button .icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.export-button .text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .add-card-button {
   display: inline-flex;
   align-items: center;
@@ -82,7 +134,14 @@
     text-align: center;
   }
 
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .export-button,
   .add-card-button {
     justify-content: center !important;
+    width: 100%;
   }
 }

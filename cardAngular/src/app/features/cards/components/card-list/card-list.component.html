@@ -1,10 +1,16 @@
 <div class="card-list-container">
   <div class="header">
     <h2>Gestion des Cartes</h2>
-    <button type="button" (click)="addNewCard()" class="add-card-button">
-      <span class="icon">+</span>
-      <span class="text">Nouvelle Carte</span>
-    </button>
+    <div class="header-actions">
+      <button type="button" (click)="exportCardsToJson()" class="export-button" [disabled]="exporting">
+        <span class="icon">📥</span>
+        <span class="text">{{ exporting ? 'Export en cours...' : 'Exporter en JSON' }}</span>
+      </button>
+      <button type="button" (click)="addNewCard()" class="add-card-button">
+        <span class="icon">+</span>
+        <span class="text">Nouvelle Carte</span>
+      </button>
+    </div>
   </div>
 
   <app-data-table

@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable } from 'rxjs';
 import { CardService, ActionCardService, ConditionCardService } from '../../../../core/services';
-import { Card } from '../../../../core/models';
+import { Card, Effect, ActionCard } from '../../../../core/models';
 import { MonsterType, ElementType } from '../../../../core/enums';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
@@ -23,6 +24,7 @@ export class CardListComponent implements OnInit {
   cards$: Observable<Card[]> = new Observable();
   cards: Card[] = [];
   loading = false;
+  exporting = false;
 
   tableConfig: TableConfig<Card> = {
     columns: [
@@ -155,7 +157,8 @@ export class CardListComponent implements OnInit {
     private cardService: CardService,
     private actionCardService: ActionCardService,
     private conditionCardService: ConditionCardService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -225,6 +228,82 @@ export class CardListComponent implements OnInit {
       data: { card: card },
       disableClose: false
     });
+  }
+
+  exportCardsToJson(): void {
+    this.exporting = true;
+    this.snackBar.open('Export en cours...', 'Fermer', { duration: 2000 });
+
+    // Récupérer toutes les cartes
+    this.cardService.getAllCards().subscribe({
+      next: (cards) => {
+        // Transformer les cartes au format d'export
+        const exportData = {
+          cards: cards.map(card => this.transformCardForExport(card))
+        };
+
+        // Créer le fichier JSON et le télécharger
+        this.downloadJsonFile(exportData, 'cartes_export');
+        this.exporting = false;
+        this.snackBar.open(`Export réussi ! ${cards.length} carte(s) exportée(s)`, 'Fermer', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Erreur lors de l\'export:', error);
+        this.exporting = false;
+        this.snackBar.open('Erreur lors de l\'export des cartes', 'Fermer', { duration: 3000 });
+      }
+    });
+  }
+
+  private transformCardForExport(card: Card): any {
+    return {
+      id: card.id,
+      name: card.name,
+      monsterType: card.monsterType || '',
+      elementType: card.elementType || '',
+      tags: card.tags || [],
+      attackPoints: card.attackPoints || 0,
+      defensePoints: card.defensePoints || 0,
+      effects: (card.effects || []).map(effect => this.transformEffectForExport(effect)),
+      imageUrl: card.imageUrl || ''
+    };
+  }
+
+  private transformEffectForExport(effect: Effect): any {
+    return {
+      id: effect.id,
+      effectName: effect.effectName || '',
+      description: effect.description || '',
+      conditionCards: (effect.conditionCards || []).map(condition => condition.nameCondition || ''),
+      actions: (effect.actions || []).map(action => ({
+        id: action.id,
+        actionName: action.actionName || '',
+        description: action.description || ''
+      }))
+    };
+  }
+
+  private downloadJsonFile(data: any, filename: string): void {
+    // Créer le JSON avec indentation pour la lisibilité
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Créer un élément <a> temporaire pour déclencher le téléchargement
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Générer un nom de fichier avec timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    link.download = `${filename}_${timestamp}.json`;
+    
+    // Déclencher le téléchargement
+    document.body.appendChild(link);
+    link.click();
+    
+    // Nettoyer
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   onSelectionChange(selectedCards: Card[]): void {
