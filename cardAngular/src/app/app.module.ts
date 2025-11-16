@@ -9,6 +9,7 @@ import { AppComponent } from './app.component';
 import { CardListComponent } from './features/cards/components/card-list/card-list.component';
 import { CardEditDialogComponent } from './features/cards/components/card-edit-dialog/card-edit-dialog.component';
 import { CardRelationsDialogComponent } from './features/cards/components/card-relations-dialog/card-relations-dialog.component';
+import { CardDetailDialogComponent } from './features/cards/components/card-detail-dialog/card-detail-dialog.component';
 import { ActionListComponent } from './features/actions/components/action-list/action-list.component';
 import { ActionEditDialogComponent } from './features/actions/components/action-edit-dialog/action-edit-dialog.component';
 import { ConditionListComponent } from './features/conditions/components/condition-list/condition-list.component';
@@ -58,6 +59,7 @@ import { ConditionParametersPageComponent } from './features/conditions/componen
     CardListComponent,
     CardEditDialogComponent,
     CardRelationsDialogComponent,
+    CardDetailDialogComponent,
     ActionListComponent,
     ActionEditDialogComponent,
     ConditionListComponent,

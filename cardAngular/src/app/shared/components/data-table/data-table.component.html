@@ -119,9 +119,11 @@
       </mat-row>
 
       <!-- Ligne d'expansion -->
-      <mat-row *matRowDef="let row; columns: ['expandedDetail']; when: shouldShowExpandedRow"
-               class="expanded-detail-row">
-      </mat-row>
+      <ng-container *ngIf="config.expandable?.enabled">
+        <mat-row *matRowDef="let row; columns: ['expandedDetail']; when: shouldShowExpandedRow"
+                 class="expanded-detail-row">
+        </mat-row>
+      </ng-container>
 
       <!-- Message vide -->
       <tr class="mat-row" *matNoDataRow>

@@ -122,6 +122,21 @@
           <div class="form-section">
             <div class="form-row">
               <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Type de carte</mat-label>
+                <mat-select formControlName="cardType">
+                  <mat-select-trigger>
+                    {{ selectedCardTypeLabel || 'Sélectionner un type' }}
+                  </mat-select-trigger>
+                  <mat-option *ngFor="let type of cardTypes" [value]="type">
+                    {{ getCardTypeLabel(type) }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="hasError('cardType', 'required')">
+                  {{ getErrorMessage('cardType') }}
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width" *ngIf="!isMagicCard">
                 <mat-label>Type de monstre</mat-label>
                 <mat-select formControlName="monsterType">
                   <mat-option *ngFor="let type of monsterTypes" [value]="type">
@@ -132,7 +147,9 @@
                   {{ getErrorMessage('monsterType') }}
                 </mat-error>
               </mat-form-field>
+            </div>
 
+            <div class="form-row">
               <mat-form-field appearance="outline" class="half-width">
                 <mat-label>Type d'élément</mat-label>
                 <mat-select formControlName="elementType">
@@ -146,7 +163,7 @@
               </mat-form-field>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" *ngIf="!isMagicCard">
               <mat-form-field appearance="outline" class="half-width">
                 <mat-label>Points d'attaque</mat-label>
                 <input matInput type="number" formControlName="attackPoints" min="0">
@@ -374,7 +391,7 @@
   <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">Annuler</button>
     <button mat-raised-button color="primary" (click)="onSave()"
-            [disabled]="cardForm.invalid">
+            [disabled]="!canSave()">
       {{ isEditMode ? 'Modifier' : 'Créer' }}
     </button>
   </mat-dialog-actions>

@@ -1,8 +1,8 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Card, CreateCardWithImageRequest, Effect, ConditionCard } from '../../../../core/models';
-import { MonsterType, ElementType } from '../../../../core/enums';
+import { CardType, MonsterType, ElementType } from '../../../../core/enums';
 import { ActionCardService, ConditionCardService, FileService, CardService, EffectService } from '../../../../core/services';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin } from 'rxjs';
@@ -16,6 +16,7 @@ import { forkJoin } from 'rxjs';
 export class CardEditDialogComponent implements OnInit {
   cardForm!: FormGroup;
   isEditMode: boolean;
+  private isLoadingInitialData = false;
 
   // Images
   selectedImages: File[] = [];
@@ -25,6 +26,7 @@ export class CardEditDialogComponent implements OnInit {
   isUploading = false;
 
   // Enums pour les selects
+  cardTypes = Object.values(CardType);
   monsterTypes = Object.values(MonsterType);
   elementTypes = Object.values(ElementType);
 
@@ -53,6 +55,11 @@ export class CardEditDialogComponent implements OnInit {
     [ElementType.ICE]: 'Glace'
   };
 
+  cardTypeLabels: Record<CardType, string> = {
+    [CardType.MONSTRE]: 'Monstre',
+    [CardType.MAGIC]: 'Magic'
+  };
+
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<CardEditDialogComponent>,
@@ -62,6 +69,7 @@ export class CardEditDialogComponent implements OnInit {
     private cardService: CardService,
     private effectService: EffectService,
     private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef,
     @Inject(MAT_DIALOG_DATA) public data: { card?: Card }
   ) {
     this.isEditMode = !!data.card;
@@ -69,6 +77,7 @@ export class CardEditDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
+    this.setupCardTypeListener();
     this.loadAvailableEffectsAndConditions();
     if (this.isEditMode) {
       this.loadCardData();
@@ -80,20 +89,111 @@ export class CardEditDialogComponent implements OnInit {
       id: [null],
       name: ['', [Validators.required, Validators.minLength(2)]],
       description: ['', [Validators.required]],
-      monsterType: ['', [Validators.required]],
+      cardType: ['', [Validators.required]],
+      monsterType: [''], // Optionnel par défaut, sera rendu requis si MONSTRE
       elementType: ['', [Validators.required]],
-      attackPoints: [0, [Validators.required, Validators.min(0)]],
-      defensePoints: [0, [Validators.required, Validators.min(0)]],
+      attackPoints: [0], // Optionnel par défaut, sera rendu requis si MONSTRE
+      defensePoints: [0], // Optionnel par défaut, sera rendu requis si MONSTRE
       tags: [''], // Champ pour les tags (séparés par des virgules)
       imageUrl: [''],
       actions: this.fb.array([]),
       conditions: this.fb.array([])
     });
+
+    // Écouter les changements du formulaire pour forcer la détection des changements
+    this.setupFormChangeDetection();
+  }
+
+  private setupFormChangeDetection(): void {
+    // Écouter les changements du formulaire pour forcer la détection des changements
+    this.cardForm.valueChanges.subscribe(() => {
+      // Si on détecte un changement et qu'on était en train de charger, arrêter le chargement
+      if (this.isLoadingInitialData) {
+        this.isLoadingInitialData = false;
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  private setupCardTypeListener(): void {
+    // Écouter les changements de cardType pour mettre à jour les validators
+    this.cardForm.get('cardType')?.valueChanges.subscribe((cardType: CardType) => {
+      const monsterTypeControl = this.cardForm.get('monsterType');
+      const attackPointsControl = this.cardForm.get('attackPoints');
+      const defensePointsControl = this.cardForm.get('defensePoints');
+
+      if (cardType === CardType.MAGIC) {
+        // Retirer les validators required pour les cartes Magic
+        monsterTypeControl?.clearValidators();
+        attackPointsControl?.clearValidators();
+        attackPointsControl?.setValidators([Validators.min(0)]);
+        defensePointsControl?.clearValidators();
+        defensePointsControl?.setValidators([Validators.min(0)]);
+
+        // Réinitialiser les valeurs
+        monsterTypeControl?.setValue(null, { emitEvent: false });
+        attackPointsControl?.setValue(0, { emitEvent: false });
+        defensePointsControl?.setValue(0, { emitEvent: false });
+      } else if (cardType === CardType.MONSTRE) {
+        // Ajouter les validators required pour les cartes Monstre
+        monsterTypeControl?.setValidators([Validators.required]);
+        attackPointsControl?.setValidators([Validators.required, Validators.min(0)]);
+        defensePointsControl?.setValidators([Validators.required, Validators.min(0)]);
+      }
+
+      // Mettre à jour l'état de validation
+      monsterTypeControl?.updateValueAndValidity({ emitEvent: false });
+      attackPointsControl?.updateValueAndValidity({ emitEvent: false });
+      defensePointsControl?.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   private loadCardData(): void {
     if (this.data.card) {
-      this.cardForm.patchValue(this.data.card);
+      this.isLoadingInitialData = true;
+      console.log('📥 Carte reçue:', this.data.card);
+      console.log('📥 cardType reçu:', this.data.card.cardType);
+
+      // Préparer les données avec une valeur par défaut pour cardType si elle n'existe pas
+      // Convertir les tags de tableau vers chaîne si nécessaire
+      const tagsValue = Array.isArray(this.data.card.tags)
+        ? this.data.card.tags.join(', ')
+        : (this.data.card.tags || '');
+
+      const cardData = {
+        ...this.data.card,
+        cardType: this.data.card.cardType || CardType.MONSTRE, // Valeur par défaut si null/undefined
+        tags: tagsValue // Convertir les tags en chaîne pour le formulaire
+      };
+
+      console.log('📥 Données préparées pour le formulaire:', cardData);
+      console.log('📥 cardType final:', cardData.cardType);
+
+      // Charger les données sans marquer le formulaire comme modifié
+      this.cardForm.patchValue(cardData, { emitEvent: false });
+
+      // Forcer la mise à jour du champ cardType si nécessaire
+      if (cardData.cardType) {
+        const cardTypeControl = this.cardForm.get('cardType');
+        if (cardTypeControl) {
+          // S'assurer que la valeur correspond exactement à une valeur de l'enum
+          const matchingCardType = this.cardTypes.find(type => type === cardData.cardType);
+          if (matchingCardType) {
+            cardTypeControl.setValue(matchingCardType, { emitEvent: true }); // Émettre l'événement pour déclencher le listener
+            console.log('✅ cardType défini à:', matchingCardType);
+          } else {
+            console.warn('⚠️ cardType ne correspond à aucune valeur de l\'enum:', cardData.cardType);
+            // Utiliser la valeur par défaut
+            cardTypeControl.setValue(CardType.MONSTRE, { emitEvent: true });
+          }
+        }
+      } else {
+        // Si cardType n'est pas défini, déclencher manuellement le listener avec la valeur par défaut
+        const cardTypeControl = this.cardForm.get('cardType');
+        if (cardTypeControl) {
+          cardTypeControl.setValue(CardType.MONSTRE, { emitEvent: true });
+        }
+      }
 
       // Charger les actions existantes
       this.loadActions();
@@ -108,6 +208,23 @@ export class CardEditDialogComponent implements OnInit {
       } else {
         console.log('⚠️ Aucun effet existant sur cette carte');
       }
+
+      // Marquer le formulaire comme pristine après le chargement initial
+      // pour que seules les modifications utilisateur marquent le formulaire comme dirty
+      // Utiliser setTimeout pour s'assurer que tous les setValue sont terminés
+      setTimeout(() => {
+        const formCardType = this.cardForm.get('cardType')?.value;
+        console.log('📥 Valeur dans le formulaire après patchValue:', formCardType);
+        console.log('📥 Valeurs disponibles dans cardTypes:', this.cardTypes);
+        console.log('📥 La valeur correspond-elle?', this.cardTypes.includes(formCardType));
+
+        // Marquer le formulaire comme pristine après toutes les opérations de chargement
+        // seulement si on est toujours en train de charger (pas de modifications utilisateur)
+        if (this.isLoadingInitialData) {
+          this.cardForm.markAsPristine();
+          this.isLoadingInitialData = false;
+        }
+      }, 100);
     }
   }
 
@@ -219,8 +336,32 @@ export class CardEditDialogComponent implements OnInit {
     return this.elementTypeLabels[type] || type;
   }
 
+  getCardTypeLabel(type: CardType | null | undefined): string {
+    if (!type) {
+      return '';
+    }
+    return this.cardTypeLabels[type] || type;
+  }
+
+  get selectedCardTypeLabel(): string {
+    const cardType = this.cardForm.get('cardType')?.value;
+    if (!cardType) {
+      return '';
+    }
+    // S'assurer que la valeur correspond à un enum CardType
+    const cardTypeValue = Object.values(CardType).includes(cardType) ? cardType : null;
+    return this.getCardTypeLabel(cardTypeValue);
+  }
+
+  get isMagicCard(): boolean {
+    const cardType = this.cardForm.get('cardType')?.value;
+    return cardType === CardType.MAGIC;
+  }
+
   onSave(): void {
-    if (this.cardForm.valid) {
+    // Utiliser la même logique que canSave() pour permettre la sauvegarde
+    // même si le formulaire n'est pas complètement valide mais a été modifié
+    if (this.canSave()) {
       const formValue = this.cardForm.value;
 
       // Vérifier si on a une image sélectionnée pour une nouvelle carte
@@ -231,7 +372,9 @@ export class CardEditDialogComponent implements OnInit {
         isEditMode: this.isEditMode,
         hasSelectedImage,
         isNewCard,
-        selectedEffectIds: this.selectedEffectIds
+        selectedEffectIds: this.selectedEffectIds,
+        formValid: this.cardForm.valid,
+        formDirty: this.cardForm.dirty
       });
 
       if (isNewCard && hasSelectedImage) {
@@ -242,15 +385,25 @@ export class CardEditDialogComponent implements OnInit {
         this.saveCardWithOldMethod(formValue);
       }
     } else {
+      // Si on ne peut pas sauvegarder, marquer les champs comme touchés pour afficher les erreurs
       this.markFormGroupTouched();
+      this.snackBar.open('Veuillez remplir les champs obligatoires', 'Fermer', { duration: 3000 });
     }
   }
 
   private createCardWithImage(formValue: any): void {
     // Convertir les tags de string vers array
-    const tags = formValue.tags
-      ? formValue.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
-      : [];
+    // Gérer le cas où tags est déjà un tableau ou une chaîne
+    let tags: string[] = [];
+    if (formValue.tags) {
+      if (Array.isArray(formValue.tags)) {
+        // Si c'est déjà un tableau, l'utiliser directement
+        tags = formValue.tags.filter((tag: any) => tag && String(tag).trim().length > 0).map((tag: any) => String(tag).trim());
+      } else if (typeof formValue.tags === 'string') {
+        // Si c'est une chaîne, la diviser par les virgules
+        tags = formValue.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+      }
+    }
 
     // Préparer les effets au format attendu par l'API
     const effects = this.selectedEffectIds.map(id => ({ id }));
@@ -258,16 +411,22 @@ export class CardEditDialogComponent implements OnInit {
     console.log('🎯 Effets sélectionnés:', this.selectedEffectIds);
     console.log('🎯 Effets formatés:', effects);
 
+    // Préparer la requête en fonction du type de carte
+    const isMagic = formValue.cardType === CardType.MAGIC;
     const request: CreateCardWithImageRequest = {
       name: formValue.name,
-      monsterType: formValue.monsterType,
+      cardType: formValue.cardType,
       elementType: formValue.elementType,
-      attackPoints: formValue.attackPoints,
-      defensePoints: formValue.defensePoints,
       tags: tags,
       image: this.selectedImages[0],
       imageName: this.selectedImages[0].name,
-      effects: effects.length > 0 ? effects : undefined
+      effects: effects.length > 0 ? effects : undefined,
+      // Inclure monsterType, attackPoints et defensePoints seulement pour les cartes Monstre
+      ...(isMagic ? {} : {
+        monsterType: formValue.monsterType,
+        attackPoints: formValue.attackPoints,
+        defensePoints: formValue.defensePoints
+      })
     };
 
     console.log('📦 Requête complète:', request);
@@ -306,6 +465,23 @@ export class CardEditDialogComponent implements OnInit {
   }
 
   private saveCardWithOldMethod(formValue: any): void {
+    // Valider que les champs essentiels sont présents
+    if (!formValue.name || !formValue.cardType || !formValue.elementType) {
+      this.snackBar.open('Veuillez remplir tous les champs obligatoires', 'Fermer', { duration: 3000 });
+      this.markFormGroupTouched();
+      return;
+    }
+
+    // Si c'est une carte Monstre, vérifier les champs spécifiques
+    if (formValue.cardType === CardType.MONSTRE) {
+      if (!formValue.monsterType || formValue.attackPoints === null || formValue.attackPoints === undefined ||
+          formValue.defensePoints === null || formValue.defensePoints === undefined) {
+        this.snackBar.open('Veuillez remplir tous les champs obligatoires pour une carte Monstre', 'Fermer', { duration: 3000 });
+        this.markFormGroupTouched();
+        return;
+      }
+    }
+
     // Séparer les données de la carte des actions et conditions
     // Utiliser la première image uploadée comme imageUrl de la carte
     const primaryImageUrl = this.existingImages.length > 0
@@ -313,9 +489,17 @@ export class CardEditDialogComponent implements OnInit {
       : formValue.imageUrl;
 
     // Préparer les tags
-    const tags = formValue.tags
-      ? formValue.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
-      : [];
+    // Gérer le cas où tags est déjà un tableau ou une chaîne
+    let tags: string[] = [];
+    if (formValue.tags) {
+      if (Array.isArray(formValue.tags)) {
+        // Si c'est déjà un tableau, l'utiliser directement
+        tags = formValue.tags.filter((tag: any) => tag && String(tag).trim().length > 0).map((tag: any) => String(tag).trim());
+      } else if (typeof formValue.tags === 'string') {
+        // Si c'est une chaîne, la diviser par les virgules
+        tags = formValue.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+      }
+    }
 
     // Préparer les effets au format attendu par l'API
     const effects = this.selectedEffectIds.map(id => ({ id }));
@@ -323,16 +507,23 @@ export class CardEditDialogComponent implements OnInit {
     console.log('🎯 Effets sélectionnés (oldMethod):', this.selectedEffectIds);
     console.log('🎯 Effets formatés (oldMethod):', effects);
 
-    const cardData = {
+    // Préparer les données en fonction du type de carte
+    const isMagic = formValue.cardType === CardType.MAGIC;
+    const cardData: any = {
       id: formValue.id,
       name: formValue.name,
-      monsterType: formValue.monsterType,
+      description: formValue.description || '', // S'assurer que description est toujours présent
+      cardType: formValue.cardType,
       elementType: formValue.elementType,
-      attackPoints: formValue.attackPoints,
-      defensePoints: formValue.defensePoints,
       imageUrl: primaryImageUrl,
       tags: tags,
-      effects: effects.length > 0 ? effects : undefined
+      effects: effects.length > 0 ? effects : undefined,
+      // Inclure monsterType, attackPoints et defensePoints seulement pour les cartes Monstre
+      ...(isMagic ? {} : {
+        monsterType: formValue.monsterType,
+        attackPoints: formValue.attackPoints,
+        defensePoints: formValue.defensePoints
+      })
     };
 
     console.log('📦 Données de carte à sauvegarder:', cardData);
@@ -383,6 +574,43 @@ export class CardEditDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  canSave(): boolean {
+    // Si le formulaire est valide, on peut toujours sauvegarder
+    if (this.cardForm.valid) {
+      return true;
+    }
+
+    // Si le formulaire a été modifié (dirty), vérifier les champs essentiels
+    if (this.cardForm.dirty) {
+      const name = this.cardForm.get('name')?.value;
+      const cardType = this.cardForm.get('cardType')?.value;
+      const elementType = this.cardForm.get('elementType')?.value;
+
+      // Vérifier les champs obligatoires de base
+      if (!name || name.trim().length < 2 || !cardType || !elementType) {
+        return false;
+      }
+
+      // Si c'est une carte Monstre, vérifier les champs spécifiques
+      if (cardType === CardType.MONSTRE) {
+        const monsterType = this.cardForm.get('monsterType')?.value;
+        const attackPoints = this.cardForm.get('attackPoints')?.value;
+        const defensePoints = this.cardForm.get('defensePoints')?.value;
+
+        if (!monsterType || attackPoints === null || attackPoints === undefined ||
+            defensePoints === null || defensePoints === undefined) {
+          return false;
+        }
+      }
+
+      // Si on arrive ici, les champs essentiels sont remplis
+      return true;
+    }
+
+    // Par défaut, ne pas permettre la sauvegarde
+    return false;
   }
 
   private markFormGroupTouched(): void {

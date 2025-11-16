@@ -1,0 +1,350 @@
+.card-detail-dialog {
+  width: 100%;
+  max-width: 900px;
+  min-height: 600px;
+}
+
+.title-icon {
+  margin-right: 12px;
+  color: var(--primary-color, #2196f3);
+  vertical-align: middle;
+}
+
+.card-content {
+  padding: 16px 0;
+}
+
+/* En-tête avec image */
+.card-header-section {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.card-image-container {
+  flex-shrink: 0;
+}
+
+.card-main-image {
+  width: 150px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-title-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card-name {
+  margin: 0 0 16px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.card-type-badge {
+  background-color: rgba(33, 150, 243, 0.3);
+}
+
+.element-badge {
+  background-color: rgba(255, 193, 7, 0.3);
+}
+
+.monster-type-badge {
+  background-color: rgba(244, 67, 54, 0.3);
+}
+
+/* Sections */
+.info-section,
+.relations-section {
+  margin: 24px 0;
+  padding: 20px;
+  background-color: var(--background-secondary, #fafafa);
+  border-radius: 12px;
+  border: 1px solid var(--border-light, #e0e0e0);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--primary-color, #2196f3);
+}
+
+.section-title mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--primary-color, #2196f3);
+}
+
+/* Informations générales */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+}
+
+.info-item span {
+  color: var(--text-primary, #333);
+  font-size: 16px;
+  padding: 8px 12px;
+  background-color: var(--background-primary, #fff);
+  border-radius: 6px;
+  border: 1px solid var(--border-light, #e0e0e0);
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.stat-value.attack {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 2px solid #ef5350;
+}
+
+.stat-value.defense {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 2px solid #42a5f5;
+}
+
+/* Relations */
+.relations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.relation-card {
+  background-color: var(--background-primary, #fff);
+  border-radius: 8px;
+  border: 2px solid var(--border-light, #e0e0e0);
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.relation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.condition-card {
+  border-left: 4px solid var(--accent-color, #ff4081);
+}
+
+.action-card {
+  border-left: 4px solid var(--primary-color, #2196f3);
+}
+
+.effect-card {
+  border-left: 4px solid var(--warn-color, #ff9800);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.order-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--primary-color, #2196f3);
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.condition-card .order-badge {
+  background: var(--accent-color, #ff4081);
+}
+
+.effect-badge {
+  background: var(--warn-color, #ff9800);
+}
+
+.card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.card-content {
+  margin-top: 8px;
+}
+
+.card-description {
+  margin: 0 0 8px 0;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.effect-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.meta-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: var(--background-tertiary, #f5f5f5);
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+}
+
+.meta-badge mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Message vide */
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-color: var(--background-tertiary, #f5f5f5);
+  border-radius: 8px;
+  border: 1px dashed var(--border-light, #e0e0e0);
+  margin: 20px 0;
+}
+
+.no-data mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: var(--text-light, #ccc);
+  margin-bottom: 12px;
+}
+
+.no-data p {
+  margin: 0;
+  color: var(--text-secondary, #666);
+  font-size: 16px;
+  font-style: italic;
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  color: var(--text-secondary, #666);
+  font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-detail-dialog {
+    max-width: 100%;
+    min-height: 500px;
+  }
+
+  .card-header-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .card-main-image {
+    width: 120px;
+    height: 160px;
+    margin: 0 auto;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .relations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-section,
+  .relations-section {
+    padding: 16px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .card-name {
+    font-size: 24px;
+  }
+}
+

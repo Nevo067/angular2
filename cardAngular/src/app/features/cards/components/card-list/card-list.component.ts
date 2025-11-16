@@ -11,6 +11,7 @@ import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
 import { CardEditDialogComponent } from '../card-edit-dialog/card-edit-dialog.component';
 import { CardRelationsDialogComponent } from '../card-relations-dialog/card-relations-dialog.component';
+import { CardDetailDialogComponent } from '../card-detail-dialog/card-detail-dialog.component';
 
 @Component({
   selector: 'app-card-list',
@@ -213,7 +214,17 @@ export class CardListComponent implements OnInit {
 
   onRowClick(card: Card): void {
     console.log('Carte sélectionnée:', card);
-    // Navigation vers la page de détail
+    // Ouvrir le dialogue de détail de la carte
+    this.openCardDetailDialog(card);
+  }
+
+  private openCardDetailDialog(card: Card): void {
+    this.dialog.open(CardDetailDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh',
+      data: { card: card },
+      disableClose: false
+    });
   }
 
   onSelectionChange(selectedCards: Card[]): void {

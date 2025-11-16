@@ -193,13 +193,22 @@ export class CardService extends BaseApiService {
 
     // Ajouter tous les champs de la carte
     formData.append('name', request.name);
-    formData.append('monsterType', request.monsterType);
+    formData.append('cardType', request.cardType);
     formData.append('elementType', request.elementType);
-    formData.append('attackPoints', request.attackPoints.toString());
-    formData.append('defensePoints', request.defensePoints.toString());
     formData.append('tags', JSON.stringify(request.tags));
     formData.append('image', request.image);
     formData.append('imageName', request.imageName);
+    
+    // Ajouter monsterType, attackPoints et defensePoints seulement s'ils sont définis (cartes Monstre)
+    if (request.monsterType !== undefined) {
+      formData.append('monsterType', request.monsterType);
+    }
+    if (request.attackPoints !== undefined) {
+      formData.append('attackPoints', request.attackPoints.toString());
+    }
+    if (request.defensePoints !== undefined) {
+      formData.append('defensePoints', request.defensePoints.toString());
+    }
 
     // Ajouter les effets si présents
     if (request.effects && request.effects.length > 0) {

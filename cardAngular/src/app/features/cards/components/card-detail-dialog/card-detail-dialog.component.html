@@ -1,0 +1,175 @@
+<div class="card-detail-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon class="title-icon">style</mat-icon>
+    Détails de la carte : {{ card.name }}
+  </h2>
+
+  <mat-dialog-content>
+    <div class="card-content" *ngIf="!loading">
+      <!-- En-tête avec image -->
+      <div class="card-header-section">
+        <div class="card-image-container" *ngIf="card.imageUrl">
+          <img [src]="card.imageUrl" [alt]="card.name" class="card-main-image" />
+        </div>
+        <div class="card-title-info">
+          <h3 class="card-name">{{ card.name }}</h3>
+          <div class="card-badges">
+            <span class="badge card-type-badge">{{ getCardTypeLabel(card.cardType) }}</span>
+            <span class="badge element-badge">{{ getElementTypeLabel(card.elementType) }}</span>
+            <span class="badge monster-type-badge" *ngIf="isMonsterCard">
+              {{ getMonsterTypeLabel(card.monsterType) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations générales -->
+      <div class="info-section">
+        <h3 class="section-title">
+          <mat-icon>info</mat-icon>
+          Informations générales
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>ID :</label>
+            <span>{{ card.id }}</span>
+          </div>
+          <div class="info-item">
+            <label>Nom :</label>
+            <span>{{ card.name }}</span>
+          </div>
+          <div class="info-item">
+            <label>Type de carte :</label>
+            <span>{{ getCardTypeLabel(card.cardType) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Type d'élément :</label>
+            <span>{{ getElementTypeLabel(card.elementType) }}</span>
+          </div>
+          <div class="info-item" *ngIf="isMonsterCard">
+            <label>Type de monstre :</label>
+            <span>{{ getMonsterTypeLabel(card.monsterType) }}</span>
+          </div>
+          <div class="info-item full-width">
+            <label>Tags :</label>
+            <span>{{ tagsAsString }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Propriétés de combat (si Monstre) -->
+      <div class="info-section" *ngIf="isMonsterCard">
+        <h3 class="section-title">
+          <mat-icon>sports_mma</mat-icon>
+          Propriétés de combat
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Points d'attaque :</label>
+            <span class="stat-value attack">{{ card.attackPoints }}</span>
+          </div>
+          <div class="info-item">
+            <label>Points de défense :</label>
+            <span class="stat-value defense">{{ card.defensePoints }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions associées -->
+      <div class="relations-section" *ngIf="actions && actions.length > 0">
+        <h3 class="section-title">
+          <mat-icon>sports_mma</mat-icon>
+          Actions associées ({{ actions.length }})
+        </h3>
+        <div class="relations-grid">
+          <div *ngFor="let action of actions; let i = index"
+               class="relation-card action-card">
+            <div class="card-header">
+              <div class="order-badge">{{ i + 1 }}</div>
+              <h4 class="card-title">{{ action.actionName }}</h4>
+            </div>
+            <div class="card-content">
+              <p class="card-description">{{ action.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-data" *ngIf="!actions || actions.length === 0">
+        <mat-icon>sports_mma</mat-icon>
+        <p>Aucune action associée</p>
+      </div>
+
+      <!-- Conditions associées -->
+      <div class="relations-section" *ngIf="conditions && conditions.length > 0">
+        <h3 class="section-title">
+          <mat-icon>rule</mat-icon>
+          Conditions associées ({{ conditions.length }})
+        </h3>
+        <div class="relations-grid">
+          <div *ngFor="let condition of conditions; let i = index"
+               class="relation-card condition-card">
+            <div class="card-header">
+              <div class="order-badge">{{ i + 1 }}</div>
+              <h4 class="card-title">{{ condition.nameCondition }}</h4>
+            </div>
+            <div class="card-content">
+              <p class="card-description">{{ condition.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-data" *ngIf="!conditions || conditions.length === 0">
+        <mat-icon>rule</mat-icon>
+        <p>Aucune condition associée</p>
+      </div>
+
+      <!-- Effets associés -->
+      <div class="relations-section" *ngIf="card.effects && card.effects.length > 0">
+        <h3 class="section-title">
+          <mat-icon>auto_awesome</mat-icon>
+          Effets associés ({{ card.effects.length }})
+        </h3>
+        <div class="relations-grid">
+          <div *ngFor="let effect of card.effects; let i = index"
+               class="relation-card effect-card">
+            <div class="card-header">
+              <div class="order-badge effect-badge">{{ i + 1 }}</div>
+              <h4 class="card-title">{{ effect.effectName }}</h4>
+            </div>
+            <div class="card-content">
+              <p class="card-description">{{ effect.description }}</p>
+              <div class="effect-meta" *ngIf="effect.conditionCards || effect.actions">
+                <span class="meta-badge" *ngIf="effect.conditionCards">
+                  <mat-icon>rule</mat-icon>
+                  {{ effect.conditionCards.length }} condition(s)
+                </span>
+                <span class="meta-badge" *ngIf="effect.actions">
+                  <mat-icon>sports_mma</mat-icon>
+                  {{ effect.actions.length }} action(s)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-data" *ngIf="!card.effects || card.effects.length === 0">
+        <mat-icon>auto_awesome</mat-icon>
+        <p>Aucun effet associé</p>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading-container" *ngIf="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Chargement des détails...</p>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onClose()">Fermer</button>
+  </mat-dialog-actions>
+</div>
+

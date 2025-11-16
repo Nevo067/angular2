@@ -1,3 +1,4 @@
+import { CardType } from '../enums/card-type.enum';
 import { ElementType } from '../enums/element-type.enum';
 import { MonsterType } from '../enums/monster-type.enum';
 import { Effect } from './effect.model';
@@ -10,6 +11,7 @@ export interface Card {
   name: string;
   monsterType: MonsterType;
   elementType: ElementType;
+  cardType: CardType;
   tags: string[];
   attackPoints: number;
   defensePoints: number;
@@ -24,6 +26,7 @@ export interface CreateCardRequest {
   name: string;
   monsterType: MonsterType;
   elementType: ElementType;
+  cardType: CardType;
   tags: string[];
   attackPoints: number;
   defensePoints: number;
@@ -39,6 +42,7 @@ export interface UpdateCardRequest {
   name: string;
   monsterType: MonsterType;
   elementType: ElementType;
+  cardType: CardType;
   tags: string[];
   attackPoints: number;
   defensePoints: number;
@@ -59,14 +63,16 @@ export interface AddEffectToCardRequest {
  */
 export interface CreateCardWithImageRequest {
   name: string;
-  monsterType: MonsterType;
   elementType: ElementType;
-  attackPoints: number;
-  defensePoints: number;
+  cardType: CardType;
   tags: string[];
   image: File;
   imageName: string;
   effects?: { id: number }[];
+  // Ces champs sont optionnels et seulement pour les cartes Monstre
+  monsterType?: MonsterType;
+  attackPoints?: number;
+  defensePoints?: number;
 }
 
 /**
