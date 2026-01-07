@@ -4,9 +4,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Observable } from 'rxjs';
-import { CardService, ActionCardService, ConditionCardService } from '../../../../core/services';
-import { Card, Effect, ActionCard } from '../../../../core/models';
+import { Observable, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { CardService, ActionCardService, ConditionCardService, ConditionParameterService } from '../../../../core/services';
+import { Card, Effect, ActionCard, ParameterDefinitionDTO } from '../../../../core/models';
 import { MonsterType, ElementType } from '../../../../core/enums';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
@@ -157,6 +158,7 @@ export class CardListComponent implements OnInit {
     private cardService: CardService,
     private actionCardService: ActionCardService,
     private conditionCardService: ConditionCardService,
+    private conditionParameterService: ConditionParameterService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -234,18 +236,38 @@ export class CardListComponent implements OnInit {
     this.exporting = true;
     this.snackBar.open('Export en cours...', 'Fermer', { duration: 2000 });
 
-    // Récupérer toutes les cartes
-    this.cardService.getAllCards().subscribe({
-      next: (cards) => {
-        // Transformer les cartes au format d'export
-        const exportData = {
-          cards: cards.map(card => this.transformCardForExport(card))
-        };
+    // Récupérer toutes les cartes et toutes les actions avec paramètres en parallèle
+    forkJoin({
+      cards: this.cardService.getAllCards(),
+      actionsWithParameters: this.actionCardService.getAllActionsWithParameters()
+    }).subscribe({
+      next: ({ cards, actionsWithParameters }) => {
+        // Créer une Map actionId -> ActionCard avec paramètres
+        const actionsMap = new Map<number, ActionCard>();
+        actionsWithParameters.forEach(action => {
+          if (action.id) {
+            actionsMap.set(action.id, action);
+          }
+        });
 
-        // Créer le fichier JSON et le télécharger
-        this.downloadJsonFile(exportData, 'cartes_export');
-        this.exporting = false;
-        this.snackBar.open(`Export réussi ! ${cards.length} carte(s) exportée(s)`, 'Fermer', { duration: 3000 });
+        // Récupérer les paramètres des conditions
+        this.loadConditionParameters(cards).then(conditionParamsMap => {
+          // Transformer les cartes au format d'export avec les paramètres
+          const exportData = {
+            exportVersion: '1.0',
+            exportDate: new Date().toISOString(),
+            cards: cards.map(card => this.transformCardForExport(card, actionsMap, conditionParamsMap))
+          };
+
+          // Créer le fichier JSON et le télécharger
+          this.downloadJsonFile(exportData, 'cartes_export');
+          this.exporting = false;
+          this.snackBar.open(`Export réussi ! ${cards.length} carte(s) exportée(s)`, 'Fermer', { duration: 3000 });
+        }).catch(error => {
+          console.error('Erreur lors du chargement des paramètres de conditions:', error);
+          this.exporting = false;
+          this.snackBar.open('Erreur lors de l\'export des cartes', 'Fermer', { duration: 3000 });
+        });
       },
       error: (error) => {
         console.error('Erreur lors de l\'export:', error);
@@ -255,7 +277,38 @@ export class CardListComponent implements OnInit {
     });
   }
 
-  private transformCardForExport(card: Card): any {
+  private async loadConditionParameters(cards: Card[]): Promise<Map<number, any[]>> {
+    const conditionParamsMap = new Map<number, any[]>();
+    
+    // Collecter tous les IDs de conditions uniques
+    const conditionIds = new Set<number>();
+    cards.forEach(card => {
+      card.effects?.forEach(effect => {
+        effect.conditionCards?.forEach(condition => {
+          if (condition.id) {
+            conditionIds.add(condition.id);
+          }
+        });
+      });
+    });
+
+    // Charger les paramètres pour chaque condition
+    const loadPromises = Array.from(conditionIds).map(conditionId => 
+      this.conditionParameterService.list(conditionId).toPromise().then(
+        params => {
+          if (params) {
+            conditionParamsMap.set(conditionId, params);
+          }
+          return null;
+        }
+      ).catch(() => null)
+    );
+
+    await Promise.all(loadPromises);
+    return conditionParamsMap;
+  }
+
+  private transformCardForExport(card: Card, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<number, any[]>): any {
     return {
       id: card.id,
       name: card.name,
@@ -264,22 +317,60 @@ export class CardListComponent implements OnInit {
       tags: card.tags || [],
       attackPoints: card.attackPoints || 0,
       defensePoints: card.defensePoints || 0,
-      effects: (card.effects || []).map(effect => this.transformEffectForExport(effect)),
+      effects: (card.effects || []).map(effect => this.transformEffectForExport(effect, actionsMap, conditionParamsMap)),
       imageUrl: card.imageUrl || ''
     };
   }
 
-  private transformEffectForExport(effect: Effect): any {
+  private transformEffectForExport(effect: Effect, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<number, any[]>): any {
     return {
       id: effect.id,
       effectName: effect.effectName || '',
       description: effect.description || '',
-      conditionCards: (effect.conditionCards || []).map(condition => condition.nameCondition || ''),
-      actions: (effect.actions || []).map(action => ({
-        id: action.id,
-        actionName: action.actionName || '',
-        description: action.description || ''
-      }))
+      conditionCards: (effect.conditionCards || []).map(condition => {
+        const conditionParams = conditionParamsMap.get(condition.id || 0) || [];
+        
+        const conditionData: any = {
+          id: condition.id,
+          nameCondition: condition.nameCondition || '',
+          description: condition.description || ''
+        };
+        
+        // Ajouter les paramètres seulement s'il y en a
+        if (conditionParams.length > 0) {
+          conditionData.parameters = conditionParams.map((param: any) => ({
+            parameterDefinitionCode: param.parameterDefinitionCode,
+            valueString: param.valueString ?? null,
+            valueNumber: param.valueNumber ?? null,
+            enumOptionCode: param.enumOptionCode ?? null
+          }));
+        }
+        
+        return conditionData;
+      }),
+      actions: (effect.actions || []).map(action => {
+        // Récupérer l'action avec paramètres depuis la Map
+        const actionWithParameters = actionsMap.get(action.id);
+        const parameters = actionWithParameters?.parameters || [];
+        
+        const actionData: any = {
+          id: action.id,
+          actionName: action.actionName || '',
+          description: action.description || ''
+        };
+        
+        // Ajouter les paramètres seulement s'il y en a
+        if (parameters.length > 0) {
+          actionData.parameters = parameters.map(param => ({
+            parameterDefinitionCode: param.parameterDefinitionCode,
+            valueString: param.valueString ?? null,
+            valueNumber: param.valueNumber ?? null,
+            enumOptionCode: param.enumOptionCode ?? null
+          }));
+        }
+        
+        return actionData;
+      })
     };
   }
 

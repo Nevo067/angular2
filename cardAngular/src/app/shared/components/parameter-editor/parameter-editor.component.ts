@@ -41,24 +41,40 @@ export class ParameterEditorComponent implements OnInit {
 
   private initItems(): void {
     const mapExisting = new Map(this.currentValues.map(v => [v.parameterDefinitionCode, v]));
+    
+    // Charger les options pour tous les paramètres (pas seulement ENUM)
+    for (const def of this.definitions) {
+      this.loadOptions(def.code);
+    }
+    
     for (const def of this.definitions) {
       const existing = mapExisting.get(def.code) as any;
+      
+      // Pour les STRING avec options : mapper enumOptionCode vers valueString si présent
+      let initialValueString = existing?.valueString || null;
+      let initialEnumOptionCode = existing?.enumOptionCode || null;
+      
+      if (def.valueType === 'STRING' && existing?.enumOptionCode && !existing?.valueString) {
+        // Si on a enumOptionCode mais pas valueString, utiliser enumOptionCode comme valueString
+        initialValueString = existing.enumOptionCode;
+      } else if (def.valueType === 'STRING' && existing?.valueString && !existing?.enumOptionCode) {
+        // Si on a valueString mais pas enumOptionCode, essayer de matcher avec les options
+        initialEnumOptionCode = existing.valueString;
+      }
+      
       const group = this.fb.group({
         enabled: [!!existing],
         parameterDefinitionCode: [def.code, Validators.required],
-        valueString: [existing?.valueString || null],
+        valueString: [initialValueString],
         valueNumber: [existing?.valueNumber || null],
-        enumOptionCode: [existing?.enumOptionCode || null]
+        enumOptionCode: [initialEnumOptionCode]
       });
-      this.applyValidators(group, def.valueType);
+      this.applyValidators(group, def.valueType, def.code);
       this.items.push(group);
-      if (def.valueType === 'ENUM') {
-        this.loadOptions(def.code);
-      }
     }
   }
 
-  private applyValidators(group: FormGroup, type: ParameterValueType): void {
+  private applyValidators(group: FormGroup, type: ParameterValueType, defCode?: string): void {
     group.get('valueString')!.clearValidators();
     group.get('valueNumber')!.clearValidators();
     group.get('enumOptionCode')!.clearValidators();
@@ -71,6 +87,9 @@ export class ParameterEditorComponent implements OnInit {
       return;
     }
 
+    // Pour STRING avec options, on valide valueString (qui contient le code de l'option)
+    const hasOptions = defCode ? this.hasOptions(defCode) : false;
+    
     if (type === 'STRING') {
       group.get('valueString')!.setValidators([Validators.required]);
     } else if (type === 'NUMBER') {
@@ -89,24 +108,68 @@ export class ParameterEditorComponent implements OnInit {
     if (!enabled) {
       group.patchValue({ valueString: null, valueNumber: null, enumOptionCode: null });
     }
-    this.applyValidators(group, def.valueType);
+    this.applyValidators(group, def.valueType, def.code);
   }
 
   loadOptions(defCode: string): void {
     if (this.optionsByCode.has(defCode)) return;
-    this.paramDefSrv.listEnumOptions(defCode).subscribe(opts => this.optionsByCode.set(defCode, opts));
+    this.paramDefSrv.listEnumOptions(defCode).subscribe({
+      next: (opts) => {
+        if (opts && opts.length > 0) {
+          this.optionsByCode.set(defCode, opts);
+        }
+      },
+      error: () => {
+        // Si erreur, on assume qu'il n'y a pas d'options
+        this.optionsByCode.set(defCode, []);
+      }
+    });
+  }
+
+  hasOptions(defCode: string): boolean {
+    const options = this.optionsByCode.get(defCode);
+    return options !== undefined && options.length > 0;
   }
 
   submit(): void {
     const payload = this.items.controls
-      .map(g => g.value)
-      .filter((v: any) => v.enabled)
-      .map((v: any) => ({
-        parameterDefinitionCode: v.parameterDefinitionCode,
-        valueString: v.valueString ?? null,
-        valueNumber: v.valueNumber ?? null,
-        enumOptionCode: v.enumOptionCode ?? null
-      }));
+      .map((g, index) => {
+        const def = this.definitions[index];
+        const v = g.value;
+        if (!v.enabled) return null;
+        
+        const hasOpts = this.hasOptions(def.code);
+        
+        // Pour les STRING avec options : sauvegarder dans valueString ET enumOptionCode
+        if (def.valueType === 'STRING' && hasOpts) {
+          const selectedOptionCode = v.valueString || v.enumOptionCode;
+          return {
+            parameterDefinitionCode: v.parameterDefinitionCode,
+            valueString: selectedOptionCode ?? null,
+            valueNumber: null,
+            enumOptionCode: selectedOptionCode ?? null
+          };
+        }
+        
+        // Pour les ENUM : utiliser enumOptionCode
+        if (def.valueType === 'ENUM') {
+          return {
+            parameterDefinitionCode: v.parameterDefinitionCode,
+            valueString: null,
+            valueNumber: null,
+            enumOptionCode: v.enumOptionCode ?? null
+          };
+        }
+        
+        // Pour les autres types : comportement normal
+        return {
+          parameterDefinitionCode: v.parameterDefinitionCode,
+          valueString: v.valueString ?? null,
+          valueNumber: v.valueNumber ?? null,
+          enumOptionCode: v.enumOptionCode ?? null
+        };
+      })
+      .filter((v: any) => v !== null) as (ActionParameterValueDTO | ConditionParameterValueDTO)[];
     this.save.emit(payload);
   }
 }

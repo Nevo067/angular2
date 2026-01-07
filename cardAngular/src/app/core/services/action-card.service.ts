@@ -76,4 +76,11 @@ export class ActionCardService extends BaseApiService {
   getActionsByEffectId(effectId: number): Observable<ActionCard[]> {
     return this.get<ActionCard[]>(`${this.endpoint}/effect/${effectId}`);
   }
+
+  /**
+   * Récupère toutes les actions avec leurs paramètres
+   */
+  getAllActionsWithParameters(): Observable<ActionCard[]> {
+    return this.get<ActionCard[]>(`${this.endpoint}/withParameters`);
+  }
 }

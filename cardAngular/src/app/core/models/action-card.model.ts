@@ -1,4 +1,5 @@
 import { ConditionCard } from './condition-card.model';
+import { ActionParameterValueDTO } from './action-parameter-value.model';
 
 /**
  * Modèle pour les actions des cartes
@@ -8,6 +9,7 @@ export interface ActionCard {
   actionName: string;
   description: string;
   cardCondition: ConditionCard;
+  parameters?: ActionParameterValueDTO[];
 }
 
 /**
