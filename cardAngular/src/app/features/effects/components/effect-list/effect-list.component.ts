@@ -455,8 +455,9 @@ export class EffectListComponent implements OnInit {
 
   private openEffectDialog(effect?: Effect): void {
     const dialogRef = this.dialog.open(EffectEditDialogComponent, {
-      width: '600px',
-      maxHeight: '90vh',
+      width: '1200px',
+      maxWidth: '95vw',
+      maxHeight: '95vh',
       data: { effect: effect },
       disableClose: true
     });

@@ -11,3 +11,4 @@ export * from './parameter-definition.model';
 export * from './enum-option.model';
 export * from './action-parameter-value.model';
 export * from './condition-parameter-value.model';
+export * from './effect-parameter-value.model';

@@ -1,0 +1,90 @@
+<div class="parameters-page-container" *ngIf="!loading; else loadingTpl">
+  <div class="header">
+    <div class="title-section">
+      <h2>Configuration des paramètres d'effet</h2>
+      <p class="subtitle" *ngIf="effect">
+        Effet : {{ effect.effectName }}
+      </p>
+      <p class="subtitle" *ngIf="effect && effect.description">
+        {{ effect.description }}
+      </p>
+    </div>
+    <div class="actions-section">
+      <button mat-raised-button color="primary" (click)="openNewDefinitionDialog()">
+        <mat-icon>add</mat-icon>
+        Nouvelle définition de paramètre
+      </button>
+      <a mat-button [routerLink]="['/effects']" class="back-link">
+        <mat-icon>arrow_back</mat-icon>
+        Retour aux effets
+      </a>
+    </div>
+  </div>
+
+  <div class="content-section" *ngIf="effect && getActions().length > 0; else noActions">
+    <div class="info-box">
+      <mat-icon>info</mat-icon>
+      <p>Configurez les paramètres pour chaque action associée à cet effet. Les paramètres sont spécifiques à chaque combinaison effet/action.</p>
+    </div>
+
+    <div class="actions-list" *ngIf="definitions.length > 0; else noDefinitions">
+      <mat-expansion-panel *ngFor="let action of getActions()" class="action-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>sports_mma</mat-icon>
+            <span>{{ action.actionName }}</span>
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ getActionParameters(action.id).length }} paramètre(s) configuré(s)
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        
+        <div class="action-parameters-content">
+          <p class="action-description" *ngIf="action.description">{{ action.description }}</p>
+          
+          <app-parameter-editor
+            [ownerType]="'effect'"
+            [ownerId]="action.id"
+            [effectId]="effectId"
+            [actionId]="action.id"
+            [definitions]="definitions"
+            [currentValues]="getActionParameters(action.id)"
+            (save)="onSave(action.id, $event)">
+          </app-parameter-editor>
+        </div>
+      </mat-expansion-panel>
+    </div>
+
+    <ng-template #noDefinitions>
+      <div class="empty-state">
+        <mat-icon class="empty-icon">settings_suggest</mat-icon>
+        <h3>Aucune définition de paramètre disponible</h3>
+        <p>Commencez par créer une définition de paramètre pour configurer les actions de cet effet.</p>
+        <button mat-raised-button color="primary" (click)="openNewDefinitionDialog()">
+          <mat-icon>add</mat-icon>
+          Créer ma première définition
+        </button>
+      </div>
+    </ng-template>
+  </div>
+
+  <ng-template #noActions>
+    <div class="empty-state">
+      <mat-icon class="empty-icon">sports_mma</mat-icon>
+      <h3>Aucune action associée à cet effet</h3>
+      <p>Pour configurer des paramètres, vous devez d'abord associer des actions à cet effet.</p>
+      <a mat-raised-button color="primary" [routerLink]="['/effects']">
+        <mat-icon>arrow_back</mat-icon>
+        Retour aux effets
+      </a>
+    </div>
+  </ng-template>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement des paramètres...</p>
+  </div>
+</ng-template>
+

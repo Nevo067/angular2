@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConditionParameterService, ParameterDefinitionService } from '../../../../core/services';
-import { ConditionParameterValueDTO, ParameterDefinitionDTO } from '../../../../core/models';
+import { ConditionParameterValueDTO, ParameterDefinitionDTO, ActionParameterValueDTO, EffectParameterValueDTO } from '../../../../core/models';
 import { RouterModule } from '@angular/router';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 
@@ -43,8 +43,13 @@ export class ConditionParametersPageComponent implements OnInit {
     });
   }
 
-  onSave(payload: ConditionParameterValueDTO[]): void {
-    const tasks = payload.map(p => this.svc.upsert(this.conditionId, p));
+  onSave(payload: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]): void {
+    // Filtrer uniquement les ConditionParameterValueDTO
+    const conditionParams = payload.filter((p): p is ConditionParameterValueDTO => {
+      return !('effectId' in p) && !('actionId' in p) && !('action' in p);
+    }) as ConditionParameterValueDTO[];
+    
+    const tasks = conditionParams.map(p => this.svc.upsert(this.conditionId, p));
     let done = 0;
     let errors = 0;
     

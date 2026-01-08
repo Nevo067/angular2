@@ -1,8 +1,11 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { Effect, ConditionCard, ActionCard } from '../../../../core/models';
-import { ConditionCardService, ActionCardService } from '../../../../core/services';
+import { Router } from '@angular/router';
+import { firstValueFrom, forkJoin } from 'rxjs';
+import { Effect, ConditionCard, ActionCard, EffectParameterValueDTO, ParameterDefinitionDTO, ActionParameterValueDTO, ConditionParameterValueDTO } from '../../../../core/models';
+import { ConditionCardService, ActionCardService, EffectParameterService, ParameterDefinitionService } from '../../../../core/services';
+import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 
 @Component({
   selector: 'app-effect-edit-dialog',
@@ -15,13 +18,20 @@ export class EffectEditDialogComponent implements OnInit {
   isEditMode: boolean;
   availableConditions: ConditionCard[] = [];
   availableActions: ActionCard[] = [];
+  parameterDefinitions: ParameterDefinitionDTO[] = [];
+  actionParameters: Map<number, EffectParameterValueDTO[]> = new Map();
+  expandedActions: Set<number> = new Set();
+  @ViewChildren(ParameterEditorComponent) parameterEditors!: QueryList<ParameterEditorComponent>;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<EffectEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { effect?: Effect },
     private conditionCardService: ConditionCardService,
-    private actionCardService: ActionCardService
+    private actionCardService: ActionCardService,
+    private effectParameterService: EffectParameterService,
+    private parameterDefinitionService: ParameterDefinitionService,
+    private router: Router
   ) {
     this.isEditMode = !!data.effect;
   }
@@ -29,8 +39,10 @@ export class EffectEditDialogComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
     this.loadAvailableData();
+    this.loadParameterDefinitions();
     if (this.isEditMode) {
       this.loadEffectData();
+      this.preloadAllParameters();
     }
   }
 
@@ -92,8 +104,99 @@ export class EffectEditDialogComponent implements OnInit {
         this.data.effect.actions.forEach(action => {
           actionsArray.push(this.fb.control(action.id));
         });
+        // Les paramètres seront chargés uniquement quand l'utilisateur clique sur expand
       }
     }
+  }
+
+  private loadParameterDefinitions(): void {
+    this.parameterDefinitionService.listDefinitions().subscribe({
+      next: (defs) => {
+        this.parameterDefinitions = defs;
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement des définitions de paramètres:', error);
+      }
+    });
+  }
+
+  private preloadAllParameters(): void {
+    if (!this.data.effect?.id) return;
+
+    const effectId = this.data.effect.id;
+    const actions = this.data.effect.actions || [];
+
+    if (actions.length === 0) return;
+
+    // Charger tous les paramètres pour toutes les actions en parallèle
+    const loadTasks = actions.map(action =>
+      this.effectParameterService.list(effectId, action.id)
+    );
+
+    // Utiliser forkJoin pour charger tous les paramètres en parallèle
+    forkJoin(loadTasks).subscribe({
+      next: (results) => {
+        results.forEach((params, index) => {
+          const actionId = actions[index].id;
+          this.actionParameters.set(actionId, params);
+        });
+        console.log('✅ Tous les paramètres préchargés:', this.actionParameters);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du préchargement des paramètres:', error);
+      }
+    });
+  }
+
+  getActionParameters(actionId: number): EffectParameterValueDTO[] {
+    return this.actionParameters.get(actionId) || [];
+  }
+
+  toggleActionParameters(actionId: number): void {
+    if (this.expandedActions.has(actionId)) {
+      this.expandedActions.delete(actionId);
+    } else {
+      this.expandedActions.add(actionId);
+      // Charger les paramètres si pas encore chargés
+      if (!this.actionParameters.has(actionId) && this.data.effect?.id) {
+        this.effectParameterService.list(this.data.effect.id, actionId).subscribe({
+          next: (params) => {
+            this.actionParameters.set(actionId, params);
+          },
+          error: (error) => {
+            console.error(`❌ Erreur lors du chargement des paramètres:`, error);
+            this.actionParameters.set(actionId, []);
+          }
+        });
+      }
+    }
+  }
+
+  isActionParametersExpanded(actionId: number): boolean {
+    return this.expandedActions.has(actionId);
+  }
+
+  onSaveActionParameters(actionId: number, payload: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]): void {
+    if (!this.data.effect?.id) return;
+
+    // Filtrer et caster uniquement les EffectParameterValueDTO
+    const effectParams = payload.filter((p): p is EffectParameterValueDTO => {
+      return 'effectId' in p && 'actionId' in p;
+    }) as EffectParameterValueDTO[];
+
+    const effectId = this.data.effect.id;
+    const tasks = effectParams.map(p => firstValueFrom(this.effectParameterService.upsert(effectId, actionId, p)));
+
+    Promise.all(tasks).then(() => {
+      // Recharger les paramètres
+      this.effectParameterService.list(effectId, actionId).subscribe({
+        next: (params) => {
+          this.actionParameters.set(actionId, params);
+        }
+      });
+    }).catch(error => {
+      console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
+    });
   }
 
   onSave(): void {
@@ -102,10 +205,66 @@ export class EffectEditDialogComponent implements OnInit {
       console.log('💾 Sauvegarde de l\'effet:', formValue);
       console.log('📋 Actions sélectionnées:', formValue.selectedActions);
       console.log('📋 Conditions sélectionnées:', formValue.selectedConditions);
-      this.dialogRef.close(formValue);
+
+      // Sauvegarder tous les paramètres modifiés avant de fermer
+      if (this.isEditMode && this.data.effect?.id) {
+        this.saveAllParameters().then(() => {
+          console.log('✅ Tous les paramètres sauvegardés, fermeture du dialog');
+          this.dialogRef.close(formValue);
+        }).catch(error => {
+          console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
+          // Demander confirmation pour continuer quand même
+          if (confirm('Erreur lors de la sauvegarde des paramètres. Voulez-vous continuer quand même ?')) {
+            this.dialogRef.close(formValue);
+          }
+        });
+      } else {
+        // Pas en mode édition ou pas d'effet, fermer directement
+        this.dialogRef.close(formValue);
+      }
     } else {
       console.log('❌ Formulaire invalide:', this.effectForm.errors);
       this.markFormGroupTouched();
+    }
+  }
+
+  // Nouvelle méthode pour sauvegarder tous les paramètres
+  private async saveAllParameters(): Promise<void> {
+    if (!this.data.effect?.id) return;
+
+    const effectId = this.data.effect.id;
+    const selectedActions = this.getSelectedActions();
+    const promises: Promise<void>[] = [];
+
+    // Récupérer les valeurs actuelles depuis les parameter-editors (même si non sauvegardées)
+    this.parameterEditors.forEach(editor => {
+      if (editor.ownerType === 'effect' && editor.effectId === effectId && editor.actionId) {
+        const currentValues = editor.getCurrentValues();
+        const effectParams = currentValues.filter((p): p is EffectParameterValueDTO => {
+          return 'effectId' in p && 'actionId' in p;
+        }) as EffectParameterValueDTO[];
+
+        // Sauvegarder chaque paramètre
+        effectParams.forEach(param => {
+          const promise = firstValueFrom(
+            this.effectParameterService.upsert(effectId, editor.actionId!, param)
+          ).then(() => {
+            console.log(`✅ Paramètre sauvegardé pour l'action ${editor.actionId} (${param.parameterDefinitionCode})`);
+          }).catch(error => {
+            console.error(`❌ Erreur lors de la sauvegarde du paramètre ${param.parameterDefinitionCode} pour l'action ${editor.actionId}:`, error);
+            throw error;
+          });
+          promises.push(promise);
+        });
+      }
+    });
+
+    // Attendre que tous les paramètres soient sauvegardés
+    if (promises.length > 0) {
+      await Promise.all(promises);
+      console.log('✅ Tous les paramètres ont été sauvegardés');
+    } else {
+      console.log('ℹ️ Aucun paramètre à sauvegarder');
     }
   }
 
@@ -257,5 +416,13 @@ export class EffectEditDialogComponent implements OnInit {
     const actionsArray = this.selectedActionsArray;
     const index = actionsArray.controls.findIndex(control => control.value === actionId);
     return index >= 0 ? index + 1 : 0;
+  }
+
+  openParametersPage(): void {
+    if (this.data.effect?.id) {
+      // Fermer le dialogue et naviguer vers la page de paramètres
+      this.dialogRef.close();
+      this.router.navigate(['/effects', this.data.effect.id, 'parameters']);
+    }
   }
 }

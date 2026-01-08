@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActionParameterService, ParameterDefinitionService } from '../../../../core/services';
-import { ActionParameterValueDTO, ParameterDefinitionDTO } from '../../../../core/models';
+import { ActionParameterValueDTO, ParameterDefinitionDTO, ConditionParameterValueDTO, EffectParameterValueDTO } from '../../../../core/models';
 import { RouterModule } from '@angular/router';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 import { ParameterDefinitionEditDialogComponent } from '../../../parameters/components/parameter-definition-edit-dialog/parameter-definition-edit-dialog.component';
@@ -49,9 +49,14 @@ export class ActionParametersPageComponent implements OnInit {
     });
   }
 
-  onSave(payload: ActionParameterValueDTO[]): void {
+  onSave(payload: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]): void {
+    // Filtrer uniquement les ActionParameterValueDTO
+    const actionParams = payload.filter((p): p is ActionParameterValueDTO => {
+      return !('effectId' in p) && !('condition' in p);
+    }) as ActionParameterValueDTO[];
+    
     // envoyer chaque valeur (upsert)
-    const tasks = payload.map(p => this.svc.upsert(this.actionId, p));
+    const tasks = actionParams.map(p => this.svc.upsert(this.actionId, p));
     let done = 0;
     let errors = 0;
     

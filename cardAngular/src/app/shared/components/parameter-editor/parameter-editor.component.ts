@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActionParameterValueDTO, ConditionParameterValueDTO, EnumOptionDTO, ParameterDefinitionDTO, ParameterValueType } from '../../../core/models';
+import { ActionParameterValueDTO, ConditionParameterValueDTO, EffectParameterValueDTO, EnumOptionDTO, ParameterDefinitionDTO, ParameterValueType } from '../../../core/models';
 import { ParameterDefinitionService } from '../../../core/services';
 import { ReactiveFormsModule } from '@angular/forms';
 
-type OwnerType = 'action' | 'condition';
+type OwnerType = 'action' | 'condition' | 'effect';
 
 @Component({
   selector: 'app-parameter-editor',
@@ -14,13 +14,15 @@ type OwnerType = 'action' | 'condition';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule]
 })
-export class ParameterEditorComponent implements OnInit {
+export class ParameterEditorComponent implements OnInit, OnChanges {
   @Input() ownerType: OwnerType = 'action';
   @Input() ownerId!: number;
+  @Input() effectId?: number; // Requis si ownerType === 'effect'
+  @Input() actionId?: number; // Requis si ownerType === 'effect'
   @Input() definitions: ParameterDefinitionDTO[] = [];
-  @Input() currentValues: (ActionParameterValueDTO | ConditionParameterValueDTO)[] = [];
+  @Input() currentValues: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[] = [];
 
-  @Output() save = new EventEmitter<(ActionParameterValueDTO | ConditionParameterValueDTO)[]>();
+  @Output() save = new EventEmitter<(ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]>();
   @Output() remove = new EventEmitter<number>();
 
   form!: FormGroup;
@@ -33,6 +35,25 @@ export class ParameterEditorComponent implements OnInit {
       items: this.fb.array([])
     });
     this.initItems();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Réagir aux changements de currentValues ou definitions après l'initialisation
+    // Ne réinitialiser que si le form est déjà initialisé (après ngOnInit)
+    if (this.form && (changes['currentValues'] || changes['definitions'])) {
+      // Vérifier que les définitions sont chargées avant de réinitialiser
+      if (this.definitions && this.definitions.length > 0) {
+        // Vider le FormArray avant de réinitialiser
+        while (this.items.length !== 0) {
+          this.items.removeAt(0);
+        }
+        // Réinitialiser les options si les définitions ont changé
+        if (changes['definitions']) {
+          this.optionsByCode.clear();
+        }
+        this.initItems();
+      }
+    }
   }
 
   get items(): FormArray {
@@ -132,7 +153,37 @@ export class ParameterEditorComponent implements OnInit {
   }
 
   submit(): void {
-    const payload = this.items.controls
+    // Marquer tous les champs comme touchés pour afficher les erreurs
+    this.items.controls.forEach(control => {
+      control.markAllAsTouched();
+    });
+
+    // Vérifier si le formulaire est valide
+    if (this.form.valid) {
+      const payload = this.getCurrentValues();
+      if (payload.length > 0) {
+        console.log('💾 Sauvegarde des paramètres:', payload);
+        this.save.emit(payload);
+      } else {
+        console.log('ℹ️ Aucun paramètre activé à sauvegarder');
+        // Émettre quand même un tableau vide pour indiquer qu'il n'y a rien à sauvegarder
+        this.save.emit([]);
+      }
+    } else {
+      console.error('❌ Formulaire invalide, impossible de sauvegarder');
+      // Trouver les erreurs et les afficher
+      this.items.controls.forEach((control, index) => {
+        if (control.invalid) {
+          const errors = control.errors;
+          console.error(`Erreur pour le paramètre ${index}:`, errors);
+        }
+      });
+    }
+  }
+
+  // Méthode publique pour récupérer les valeurs actuelles du formulaire sans émettre l'événement
+  getCurrentValues(): (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[] {
+    return this.items.controls
       .map((g, index) => {
         const def = this.definitions[index];
         const v = g.value;
@@ -140,37 +191,44 @@ export class ParameterEditorComponent implements OnInit {
         
         const hasOpts = this.hasOptions(def.code);
         
+        // Base payload commun
+        const basePayload: any = {
+          parameterDefinitionCode: v.parameterDefinitionCode,
+          valueString: null,
+          valueNumber: null,
+          enumOptionCode: null
+        };
+        
+        // Pour les paramètres d'effets, ajouter effectId et actionId
+        if (this.ownerType === 'effect') {
+          if (this.effectId === undefined || this.actionId === undefined) {
+            console.error('effectId and actionId are required for effect parameters');
+            return null;
+          }
+          basePayload.effectId = this.effectId;
+          basePayload.actionId = this.actionId;
+        }
+        
         // Pour les STRING avec options : sauvegarder dans valueString ET enumOptionCode
         if (def.valueType === 'STRING' && hasOpts) {
           const selectedOptionCode = v.valueString || v.enumOptionCode;
-          return {
-            parameterDefinitionCode: v.parameterDefinitionCode,
-            valueString: selectedOptionCode ?? null,
-            valueNumber: null,
-            enumOptionCode: selectedOptionCode ?? null
-          };
+          basePayload.valueString = selectedOptionCode ?? null;
+          basePayload.enumOptionCode = selectedOptionCode ?? null;
+          return basePayload;
         }
         
         // Pour les ENUM : utiliser enumOptionCode
         if (def.valueType === 'ENUM') {
-          return {
-            parameterDefinitionCode: v.parameterDefinitionCode,
-            valueString: null,
-            valueNumber: null,
-            enumOptionCode: v.enumOptionCode ?? null
-          };
+          basePayload.enumOptionCode = v.enumOptionCode ?? null;
+          return basePayload;
         }
         
         // Pour les autres types : comportement normal
-        return {
-          parameterDefinitionCode: v.parameterDefinitionCode,
-          valueString: v.valueString ?? null,
-          valueNumber: v.valueNumber ?? null,
-          enumOptionCode: v.enumOptionCode ?? null
-        };
+        basePayload.valueString = v.valueString ?? null;
+        basePayload.valueNumber = v.valueNumber ?? null;
+        return basePayload;
       })
-      .filter((v: any) => v !== null) as (ActionParameterValueDTO | ConditionParameterValueDTO)[];
-    this.save.emit(payload);
+      .filter((v: any) => v !== null) as (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[];
   }
 }
 

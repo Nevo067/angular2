@@ -84,31 +84,68 @@
 
        <!-- Section Actions -->
        <div class="section-container">
-         <h3 class="section-title">Actions associées</h3>
+         <div class="section-header">
+           <h3 class="section-title">Actions associées</h3>
+           <button *ngIf="isEditMode && data.effect?.id" 
+                   mat-raised-button 
+                   color="primary" 
+                   (click)="openParametersPage()"
+                   class="manage-parameters-button">
+             <mat-icon>settings</mat-icon>
+             Gérer les paramètres
+           </button>
+         </div>
 
          <!-- Liste des actions sélectionnées avec ordre -->
          <div class="selected-items" *ngIf="getSelectedActions().length > 0">
            <h4 class="subsection-title">Ordre des actions sélectionnées :</h4>
            <div class="selected-list">
-             <div *ngFor="let action of getSelectedActions(); let i = index"
-                  class="selected-item">
-               <div class="order-number">{{ i + 1 }}</div>
-               <div class="item-info">
-                 <h5 class="item-name">{{ action.actionName }}</h5>
-                 <p class="item-description">{{ action.description }}</p>
+             <ng-container *ngFor="let action of getSelectedActions(); let i = index">
+               <div class="action-item-wrapper">
+                 <div class="selected-item">
+                   <div class="order-number">{{ i + 1 }}</div>
+                   <div class="item-info">
+                     <h5 class="item-name">{{ action.actionName }}</h5>
+                     <p class="item-description">{{ action.description }}</p>
+                   </div>
+                   <div class="item-actions">
+                     <button mat-icon-button 
+                             (click)="toggleActionParameters(action.id)"
+                             [matTooltip]="isActionParametersExpanded(action.id) ? 'Masquer les paramètres' : 'Afficher les paramètres'"
+                             *ngIf="isEditMode"
+                             [class.expanded]="isActionParametersExpanded(action.id)">
+                       <mat-icon>{{ isActionParametersExpanded(action.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                     </button>
+                     <button mat-icon-button (click)="moveActionUp(i)" [disabled]="i === 0">
+                       <mat-icon>keyboard_arrow_up</mat-icon>
+                     </button>
+                     <button mat-icon-button (click)="moveActionDown(i)" [disabled]="i === getSelectedActions().length - 1">
+                       <mat-icon>keyboard_arrow_down</mat-icon>
+                     </button>
+                     <button mat-icon-button (click)="removeAction(i)" color="warn">
+                       <mat-icon>remove_circle</mat-icon>
+                     </button>
+                   </div>
+                 </div>
+                 
+                 <!-- Section paramètres pour chaque action (uniquement en mode édition) -->
+                 <div class="action-parameters-section"
+                      *ngIf="isEditMode && isActionParametersExpanded(action.id) && data.effect">
+                   <div class="parameters-container">
+                     <h5 class="parameters-title">Paramètres de l'action "{{ action.actionName }}"</h5>
+                     <app-parameter-editor
+                       [ownerType]="'effect'"
+                       [ownerId]="action.id"
+                       [effectId]="data.effect.id"
+                       [actionId]="action.id"
+                       [definitions]="parameterDefinitions"
+                       [currentValues]="getActionParameters(action.id)"
+                       (save)="onSaveActionParameters(action.id, $event)">
+                     </app-parameter-editor>
+                   </div>
+                 </div>
                </div>
-               <div class="item-actions">
-                 <button mat-icon-button (click)="moveActionUp(i)" [disabled]="i === 0">
-                   <mat-icon>keyboard_arrow_up</mat-icon>
-                 </button>
-                 <button mat-icon-button (click)="moveActionDown(i)" [disabled]="i === getSelectedActions().length - 1">
-                   <mat-icon>keyboard_arrow_down</mat-icon>
-                 </button>
-                 <button mat-icon-button (click)="removeAction(i)" color="warn">
-                   <mat-icon>remove_circle</mat-icon>
-                 </button>
-               </div>
-             </div>
+             </ng-container>
            </div>
          </div>
 
