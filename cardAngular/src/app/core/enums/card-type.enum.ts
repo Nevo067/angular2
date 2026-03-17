@@ -3,7 +3,8 @@
  */
 export enum CardType {
   MONSTRE = 'MONSTRE',
-  MAGIC = 'MAGIC'
+  MAGIC = 'MAGIC',
+  MANA = 'MANA'
 }
 
 /**
@@ -11,6 +12,7 @@ export enum CardType {
  */
 export const CardTypeLabels: Record<CardType, string> = {
   [CardType.MONSTRE]: 'Monstre',
-  [CardType.MAGIC]: 'Magic'
+  [CardType.MAGIC]: 'Magic',
+  [CardType.MANA]: 'Mana'
 };
 

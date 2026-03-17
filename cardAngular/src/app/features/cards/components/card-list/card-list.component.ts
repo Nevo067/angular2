@@ -8,7 +8,7 @@ import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CardService, ActionCardService, ConditionCardService, ConditionParameterService, EffectParameterService } from '../../../../core/services';
 import { Card, Effect, ActionCard, ParameterDefinitionDTO } from '../../../../core/models';
-import { MonsterType, ElementType } from '../../../../core/enums';
+import { MonsterType, ElementType, CardType, CardTypeLabels } from '../../../../core/enums';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
 import { CardEditDialogComponent } from '../card-edit-dialog/card-edit-dialog.component';
@@ -49,6 +49,17 @@ export class CardListComponent implements OnInit {
         type: 'text',
         sortable: true,
         filterable: true
+      },
+      {
+        key: 'cardType',
+        label: 'Type de carte',
+        type: 'chip',
+        sortable: true,
+        chipConfig: {
+          color: 'primary',
+          textColor: 'white'
+        },
+        formatter: (value: CardType) => CardTypeLabels[value as CardType] || value
       },
       {
         key: 'monsterType',
@@ -171,7 +182,9 @@ export class CardListComponent implements OnInit {
   loadCards(): void {
     console.log('🔄 Chargement des cartes...');
     this.loading = true;
-    this.cards$ = this.cardService.getAllCards();
+    // Ajouter un timestamp pour éviter le cache
+    const timestamp = new Date().getTime();
+    this.cards$ = this.cardService.getAllCards({ _t: timestamp } as any);
 
     // Gérer l'état de chargement
     this.cards$.subscribe({
@@ -556,10 +569,16 @@ export class CardListComponent implements OnInit {
           console.log('Carte modifiée avec succès:', updatedCard);
 
           // Sauvegarder les actions et conditions séparément
+          // loadCards() sera appelé dans saveActionsAndConditions après que tout soit terminé
           this.saveActionsAndConditions(card.id, actions, conditions);
 
           // Sauvegarder les images
           this.saveImages(card.id, images);
+
+          // Si pas d'actions/conditions, recharger immédiatement
+          if ((!actions || actions.length === 0) && (!conditions || conditions.length === 0)) {
+            this.loadCards();
+          }
         },
         error: (error: any) => {
           console.error('Erreur lors de la modification:', error);

@@ -184,7 +184,9 @@ export class BaseApiService {
       errorMessage = `Erreur: ${error.error.message}`;
     } else {
       // Erreur côté serveur
-      if (error.error && error.error.message) {
+      if (typeof error.error === 'string') {
+        errorMessage = error.error;
+      } else if (error.error && error.error.message) {
         errorMessage = error.error.message;
       } else {
         errorMessage = `Erreur ${error.status}: ${error.statusText}`;

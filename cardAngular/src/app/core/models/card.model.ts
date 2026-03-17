@@ -17,6 +17,7 @@ export interface Card {
   defensePoints: number;
   imageUrl: string;
   effects: Effect[];
+  manaValue?: number;
 }
 
 /**
@@ -48,6 +49,7 @@ export interface UpdateCardRequest {
   defensePoints: number;
   imageUrl?: string;
   effects?: { id: number }[];
+  manaValue?: number;
 }
 
 /**
@@ -73,6 +75,8 @@ export interface CreateCardWithImageRequest {
   monsterType?: MonsterType;
   attackPoints?: number;
   defensePoints?: number;
+  // Pour les cartes Mana
+  manaValue?: number;
 }
 
 /**

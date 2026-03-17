@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { HttpHeaders } from '@angular/common/http';
 import { BaseApiService } from './base-api.service';
 import {
   Card,
@@ -110,12 +111,10 @@ export class CardService extends BaseApiService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<any>(`${this.baseUrl}${this.endpoint}/${cardId}/upload-image`, formData, {
-      headers: {
-        // Ne pas définir Content-Type, laisser le navigateur le faire automatiquement
-        // pour gérer correctement les FormData avec les fichiers
-      }
-    }).pipe(
+    // Ne pas passer d'objet headers du tout - HttpClient définira automatiquement
+    // le Content-Type avec la boundary appropriée pour multipart/form-data
+    // C'est la seule façon de garantir que le Content-Type est correctement défini
+    return this.http.post<any>(`${this.baseUrl}${this.endpoint}/${cardId}/upload-image`, formData).pipe(
       map(response => {
         // Corriger l'URL de l'image dans la réponse si elle existe
         if (response && response.imageUrl) {
@@ -208,6 +207,9 @@ export class CardService extends BaseApiService {
     }
     if (request.defensePoints !== undefined) {
       formData.append('defensePoints', request.defensePoints.toString());
+    }
+    if (request.manaValue !== undefined && request.manaValue != null) {
+      formData.append('manaValue', request.manaValue.toString());
     }
 
     // Ajouter les effets si présents

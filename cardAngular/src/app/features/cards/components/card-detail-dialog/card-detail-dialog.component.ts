@@ -39,7 +39,8 @@ export class CardDetailDialogComponent implements OnInit {
 
   cardTypeLabels: Record<CardType, string> = {
     [CardType.MONSTRE]: 'Monstre',
-    [CardType.MAGIC]: 'Magic'
+    [CardType.MAGIC]: 'Magic',
+    [CardType.MANA]: 'Mana'
   };
 
   constructor(
@@ -94,6 +95,10 @@ export class CardDetailDialogComponent implements OnInit {
 
   get isMonsterCard(): boolean {
     return this.card?.cardType === CardType.MONSTRE;
+  }
+
+  get isManaCard(): boolean {
+    return this.card?.cardType === CardType.MANA;
   }
 
   get tagsAsString(): string {

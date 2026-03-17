@@ -57,7 +57,8 @@ export class CardEditDialogComponent implements OnInit {
 
   cardTypeLabels: Record<CardType, string> = {
     [CardType.MONSTRE]: 'Monstre',
-    [CardType.MAGIC]: 'Magic'
+    [CardType.MAGIC]: 'Magic',
+    [CardType.MANA]: 'Mana'
   };
 
   constructor(
@@ -94,6 +95,7 @@ export class CardEditDialogComponent implements OnInit {
       elementType: ['', [Validators.required]],
       attackPoints: [0], // Optionnel par défaut, sera rendu requis si MONSTRE
       defensePoints: [0], // Optionnel par défaut, sera rendu requis si MONSTRE
+      manaValue: [null as number | null], // Pour les cartes Mana
       tags: [''], // Champ pour les tags (séparés par des virgules)
       imageUrl: [''],
       actions: this.fb.array([]),
@@ -122,6 +124,7 @@ export class CardEditDialogComponent implements OnInit {
       const attackPointsControl = this.cardForm.get('attackPoints');
       const defensePointsControl = this.cardForm.get('defensePoints');
 
+      const manaValueControl = this.cardForm.get('manaValue');
       if (cardType === CardType.MAGIC) {
         // Retirer les validators required pour les cartes Magic
         monsterTypeControl?.clearValidators();
@@ -129,8 +132,23 @@ export class CardEditDialogComponent implements OnInit {
         attackPointsControl?.setValidators([Validators.min(0)]);
         defensePointsControl?.clearValidators();
         defensePointsControl?.setValidators([Validators.min(0)]);
+        manaValueControl?.clearValidators();
+        manaValueControl?.setValue(null, { emitEvent: false });
 
         // Réinitialiser les valeurs
+        monsterTypeControl?.setValue(null, { emitEvent: false });
+        attackPointsControl?.setValue(0, { emitEvent: false });
+        defensePointsControl?.setValue(0, { emitEvent: false });
+      } else if (cardType === CardType.MANA) {
+        // Cartes Mana : pas de stats monstre, valeur mana optionnelle
+        monsterTypeControl?.clearValidators();
+        attackPointsControl?.clearValidators();
+        attackPointsControl?.setValidators([Validators.min(0)]);
+        defensePointsControl?.clearValidators();
+        defensePointsControl?.setValidators([Validators.min(0)]);
+        manaValueControl?.clearValidators();
+        manaValueControl?.setValidators([Validators.min(1)]);
+
         monsterTypeControl?.setValue(null, { emitEvent: false });
         attackPointsControl?.setValue(0, { emitEvent: false });
         defensePointsControl?.setValue(0, { emitEvent: false });
@@ -139,12 +157,15 @@ export class CardEditDialogComponent implements OnInit {
         monsterTypeControl?.setValidators([Validators.required]);
         attackPointsControl?.setValidators([Validators.required, Validators.min(0)]);
         defensePointsControl?.setValidators([Validators.required, Validators.min(0)]);
+        manaValueControl?.clearValidators();
+        manaValueControl?.setValue(null, { emitEvent: false });
       }
 
       // Mettre à jour l'état de validation
       monsterTypeControl?.updateValueAndValidity({ emitEvent: false });
       attackPointsControl?.updateValueAndValidity({ emitEvent: false });
       defensePointsControl?.updateValueAndValidity({ emitEvent: false });
+      manaValueControl?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
@@ -358,6 +379,16 @@ export class CardEditDialogComponent implements OnInit {
     return cardType === CardType.MAGIC;
   }
 
+  get isManaCard(): boolean {
+    const cardType = this.cardForm.get('cardType')?.value;
+    return cardType === CardType.MANA;
+  }
+
+  get isMonsterCard(): boolean {
+    const cardType = this.cardForm.get('cardType')?.value;
+    return cardType === CardType.MONSTRE;
+  }
+
   onSave(): void {
     // Utiliser la même logique que canSave() pour permettre la sauvegarde
     // même si le formulaire n'est pas complètement valide mais a été modifié
@@ -380,6 +411,9 @@ export class CardEditDialogComponent implements OnInit {
       if (isNewCard && hasSelectedImage) {
         // Utiliser le nouvel endpoint pour créer une carte avec image
         this.createCardWithImage(formValue);
+      } else if (!isNewCard && hasSelectedImage) {
+        // Modification d'une carte existante avec nouvelle image
+        this.saveCardWithNewImage(formValue);
       } else {
         // Utiliser l'ancienne méthode pour les autres cas
         this.saveCardWithOldMethod(formValue);
@@ -412,7 +446,8 @@ export class CardEditDialogComponent implements OnInit {
     console.log('🎯 Effets formatés:', effects);
 
     // Préparer la requête en fonction du type de carte
-    const isMagic = formValue.cardType === CardType.MAGIC;
+    const isNonMonster = formValue.cardType === CardType.MAGIC || formValue.cardType === CardType.MANA;
+    const isMana = formValue.cardType === CardType.MANA;
     const request: CreateCardWithImageRequest = {
       name: formValue.name,
       cardType: formValue.cardType,
@@ -422,11 +457,12 @@ export class CardEditDialogComponent implements OnInit {
       imageName: this.selectedImages[0].name,
       effects: effects.length > 0 ? effects : undefined,
       // Inclure monsterType, attackPoints et defensePoints seulement pour les cartes Monstre
-      ...(isMagic ? {} : {
+      ...(isNonMonster ? {} : {
         monsterType: formValue.monsterType,
         attackPoints: formValue.attackPoints,
         defensePoints: formValue.defensePoints
-      })
+      }),
+      ...(isMana && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
     };
 
     console.log('📦 Requête complète:', request);
@@ -508,7 +544,8 @@ export class CardEditDialogComponent implements OnInit {
     console.log('🎯 Effets formatés (oldMethod):', effects);
 
     // Préparer les données en fonction du type de carte
-    const isMagic = formValue.cardType === CardType.MAGIC;
+    const isNonMonster = formValue.cardType === CardType.MAGIC || formValue.cardType === CardType.MANA;
+    const isMana = formValue.cardType === CardType.MANA;
     const cardData: any = {
       id: formValue.id,
       name: formValue.name,
@@ -519,11 +556,12 @@ export class CardEditDialogComponent implements OnInit {
       tags: tags,
       effects: effects.length > 0 ? effects : undefined,
       // Inclure monsterType, attackPoints et defensePoints seulement pour les cartes Monstre
-      ...(isMagic ? {} : {
+      ...(isNonMonster ? {} : {
         monsterType: formValue.monsterType,
         attackPoints: formValue.attackPoints,
         defensePoints: formValue.defensePoints
-      })
+      }),
+      ...(isMana && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
     };
 
     console.log('📦 Données de carte à sauvegarder:', cardData);
@@ -537,6 +575,115 @@ export class CardEditDialogComponent implements OnInit {
     };
 
     this.dialogRef.close(result);
+  }
+
+  private saveCardWithNewImage(formValue: any): void {
+    // Valider que les champs essentiels sont présents
+    if (!formValue.name || !formValue.cardType || !formValue.elementType) {
+      this.snackBar.open('Veuillez remplir tous les champs obligatoires', 'Fermer', { duration: 3000 });
+      this.markFormGroupTouched();
+      return;
+    }
+
+    // Si c'est une carte Monstre, vérifier les champs spécifiques
+    if (formValue.cardType === CardType.MONSTRE) {
+      if (!formValue.monsterType || formValue.attackPoints === null || formValue.attackPoints === undefined ||
+          formValue.defensePoints === null || formValue.defensePoints === undefined) {
+        this.snackBar.open('Veuillez remplir tous les champs obligatoires pour une carte Monstre', 'Fermer', { duration: 3000 });
+        this.markFormGroupTouched();
+        return;
+      }
+    }
+
+    // Vérifier qu'on a bien une carte existante avec un ID
+    if (!this.data.card?.id) {
+      this.snackBar.open('Erreur: carte non trouvée', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    // Vérifier qu'on a bien une image sélectionnée
+    if (this.selectedImages.length === 0) {
+      this.snackBar.open('Aucune image sélectionnée', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    this.isUploading = true;
+
+    // Uploader l'image (l'endpoint met automatiquement à jour l'imageUrl de la carte)
+    this.cardService.uploadCardImage(this.data.card.id, this.selectedImages[0]).subscribe({
+      next: (uploadResult) => {
+        console.log('📤 Réponse upload:', uploadResult);
+        
+        // Récupérer l'URL de l'image depuis la réponse
+        // La réponse contient: { card: Card, imageUrl: string, fileName: string }
+        const imageUrl = uploadResult.imageUrl || (uploadResult.card && uploadResult.card.imageUrl);
+        
+        console.log('🖼️ URL image récupérée:', imageUrl);
+        
+        if (!imageUrl) {
+          console.error('❌ Aucune URL d\'image dans la réponse');
+          this.isUploading = false;
+          this.snackBar.open('Erreur: URL d\'image non trouvée dans la réponse', 'Fermer', { duration: 3000 });
+          return;
+        }
+        
+        // Récupérer la carte mise à jour (soit depuis la réponse, soit utiliser les données du formulaire)
+        const updatedCard = uploadResult.card || this.data.card;
+
+        // Préparer les tags
+        let tags: string[] = [];
+        if (formValue.tags) {
+          if (Array.isArray(formValue.tags)) {
+            tags = formValue.tags.filter((tag: any) => tag && String(tag).trim().length > 0).map((tag: any) => String(tag).trim());
+          } else if (typeof formValue.tags === 'string') {
+            tags = formValue.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+          }
+        }
+
+        // Préparer les effets au format attendu par l'API
+        const effects = this.selectedEffectIds.map(id => ({ id }));
+
+        // Préparer les données en fonction du type de carte
+        const isNonMonster = formValue.cardType === CardType.MAGIC || formValue.cardType === CardType.MANA;
+        const isMana = formValue.cardType === CardType.MANA;
+        const cardData: any = {
+          id: formValue.id,
+          name: formValue.name,
+          description: formValue.description || '',
+          cardType: formValue.cardType,
+          elementType: formValue.elementType,
+          imageUrl: imageUrl, // Utiliser la nouvelle URL d'image
+          tags: tags,
+          effects: effects.length > 0 ? effects : undefined,
+          ...(isNonMonster ? {} : {
+            monsterType: formValue.monsterType,
+            attackPoints: formValue.attackPoints,
+            defensePoints: formValue.defensePoints
+          }),
+          ...(isMana && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
+        };
+
+        console.log('📦 Données de carte à sauvegarder (avec nouvelle image):', cardData);
+
+        // Préparer le résultat avec la carte mise à jour et la nouvelle image
+        const result = {
+          card: cardData,
+          actions: formValue.actions || [],
+          conditions: formValue.conditions || [],
+          images: [{ fileName: this.selectedImages[0].name, url: imageUrl }],
+          effectIds: this.selectedEffectIds
+        };
+
+        this.isUploading = false;
+        this.snackBar.open('Image modifiée et carte mise à jour', 'Fermer', { duration: 3000 });
+        this.dialogRef.close(result);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de l\'upload de l\'image:', error);
+        this.isUploading = false;
+        this.snackBar.open('Erreur lors de l\'upload de l\'image', 'Fermer', { duration: 3000 });
+      }
+    });
   }
 
   // Méthodes pour gérer les effets
