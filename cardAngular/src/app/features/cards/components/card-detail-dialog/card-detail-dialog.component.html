@@ -76,6 +76,10 @@
             <label>Points de défense :</label>
             <span class="stat-value defense">{{ card.defensePoints }}</span>
           </div>
+          <div class="info-item" *ngIf="card.hitPoints != null">
+            <label>Points de vie (PV) :</label>
+            <span class="stat-value">{{ card.hitPoints }}</span>
+          </div>
         </div>
       </div>
 

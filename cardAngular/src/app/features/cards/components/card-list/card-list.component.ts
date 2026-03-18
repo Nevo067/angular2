@@ -117,6 +117,14 @@ export class CardListComponent implements OnInit {
         type: 'number',
         sortable: true,
         align: 'center'
+      },
+      {
+        key: 'hitPoints',
+        label: 'PV',
+        type: 'number',
+        sortable: true,
+        align: 'center',
+        formatter: (value: number | null | undefined) => value == null ? '-' : String(value)
       }
     ],
     actions: [

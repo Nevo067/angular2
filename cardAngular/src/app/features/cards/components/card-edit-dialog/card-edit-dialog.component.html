@@ -194,6 +194,15 @@
                   {{ getErrorMessage('defensePoints') }}
                 </mat-error>
               </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Points de vie (PV)</mat-label>
+                <input matInput type="number" formControlName="hitPoints" min="1" placeholder="Ex: 10">
+                <mat-error *ngIf="hasError('hitPoints', 'required')">
+                  {{ getErrorMessage('hitPoints') }}
+                </mat-error>
+                <mat-error *ngIf="hasError('hitPoints', 'min')">Minimum 1 PV</mat-error>
+              </mat-form-field>
             </div>
 
             <mat-form-field appearance="outline" class="full-width">
