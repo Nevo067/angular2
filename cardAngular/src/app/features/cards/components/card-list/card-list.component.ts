@@ -147,6 +147,9 @@ export class CardListComponent implements OnInit {
           if (row.cardType === CardType.MONSTRE) {
             return `Coût ${value}`;
           }
+          if (row.cardType === CardType.MAGIC) {
+            return `Coût ${value}`;
+          }
           if (row.cardType === CardType.MANA) {
             return `Valeur ${value}`;
           }
@@ -411,7 +414,7 @@ export class CardListComponent implements OnInit {
       hitPoints: card.hitPoints ?? null,
       level: card.level ?? null,
       manaValue: card.manaValue ?? null,
-      manaValueRole: card.cardType === CardType.MONSTRE ? 'COST' : (card.cardType === CardType.MANA ? 'VALUE' : null),
+      manaValueRole: (card.cardType === CardType.MONSTRE || card.cardType === CardType.MAGIC) ? 'COST' : (card.cardType === CardType.MANA ? 'VALUE' : null),
       effects: (card.effects || []).map(effect => this.transformEffectForExport(effect, actionsMap, conditionParamsMap, effectParamsMap)),
       imageUrl: card.imageUrl || ''
     };

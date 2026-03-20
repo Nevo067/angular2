@@ -62,6 +62,10 @@
             <label>Coût en mana :</label>
             <span>{{ card.manaValue }} mana</span>
           </div>
+          <div class="info-item" *ngIf="isMagicCard && card.manaValue != null">
+            <label>Coût en mana :</label>
+            <span>{{ card.manaValue }} mana</span>
+          </div>
           <div class="info-item full-width">
             <label>Tags :</label>
             <span>{{ tagsAsString }}</span>
