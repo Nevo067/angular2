@@ -2,6 +2,10 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.3.
 
+## Export JSON des cartes
+
+Le format d’export (bouton **Exporter en JSON** sur la liste des cartes) est documenté ici : [docs/EXPORT_CARTES_JSON.md](docs/EXPORT_CARTES_JSON.md) (schéma v1.1 : `cardType`, `hitPoints`, `manaValue`, effets et paramètres).
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.

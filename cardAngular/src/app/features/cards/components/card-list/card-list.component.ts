@@ -279,7 +279,7 @@ export class CardListComponent implements OnInit {
         ]).then(([conditionParamsMap, effectParamsMap]) => {
           // Transformer les cartes au format d'export avec les paramètres
           const exportData = {
-            exportVersion: '1.0',
+            exportVersion: '1.1',
             exportDate: new Date().toISOString(),
             cards: cards.map(card => this.transformCardForExport(card, actionsMap, conditionParamsMap, effectParamsMap))
           };
@@ -375,11 +375,14 @@ export class CardListComponent implements OnInit {
     return {
       id: card.id,
       name: card.name,
+      cardType: card.cardType ?? null,
       monsterType: card.monsterType || '',
       elementType: card.elementType || '',
       tags: card.tags || [],
-      attackPoints: card.attackPoints || 0,
-      defensePoints: card.defensePoints || 0,
+      attackPoints: card.attackPoints ?? 0,
+      defensePoints: card.defensePoints ?? 0,
+      hitPoints: card.hitPoints ?? null,
+      manaValue: card.manaValue ?? null,
       effects: (card.effects || []).map(effect => this.transformEffectForExport(effect, actionsMap, conditionParamsMap, effectParamsMap)),
       imageUrl: card.imageUrl || ''
     };
