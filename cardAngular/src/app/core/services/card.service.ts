@@ -211,6 +211,9 @@ export class CardService extends BaseApiService {
     if (request.hitPoints !== undefined && request.hitPoints != null) {
       formData.append('hitPoints', request.hitPoints.toString());
     }
+    if (request.level !== undefined && request.level != null) {
+      formData.append('level', request.level.toString());
+    }
     if (request.manaValue !== undefined && request.manaValue != null) {
       formData.append('manaValue', request.manaValue.toString());
     }

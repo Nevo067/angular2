@@ -125,6 +125,33 @@ export class CardListComponent implements OnInit {
         sortable: true,
         align: 'center',
         formatter: (value: number | null | undefined) => value == null ? '-' : String(value)
+      },
+      {
+        key: 'level',
+        label: 'Level',
+        type: 'text',
+        sortable: true,
+        align: 'center',
+        formatter: (value: number | null | undefined, row: Card) => row.cardType === CardType.MONSTRE && value != null ? String(value) : '-'
+      },
+      {
+        key: 'manaValue',
+        label: 'Mana',
+        type: 'text',
+        sortable: true,
+        align: 'center',
+        formatter: (value: number | null | undefined, row: Card) => {
+          if (value == null) {
+            return '-';
+          }
+          if (row.cardType === CardType.MONSTRE) {
+            return `Coût ${value}`;
+          }
+          if (row.cardType === CardType.MANA) {
+            return `Valeur ${value}`;
+          }
+          return '-';
+        }
       }
     ],
     actions: [
@@ -279,7 +306,7 @@ export class CardListComponent implements OnInit {
         ]).then(([conditionParamsMap, effectParamsMap]) => {
           // Transformer les cartes au format d'export avec les paramètres
           const exportData = {
-            exportVersion: '1.1',
+            exportVersion: '1.2',
             exportDate: new Date().toISOString(),
             cards: cards.map(card => this.transformCardForExport(card, actionsMap, conditionParamsMap, effectParamsMap))
           };
@@ -382,7 +409,9 @@ export class CardListComponent implements OnInit {
       attackPoints: card.attackPoints ?? 0,
       defensePoints: card.defensePoints ?? 0,
       hitPoints: card.hitPoints ?? null,
+      level: card.level ?? null,
       manaValue: card.manaValue ?? null,
+      manaValueRole: card.cardType === CardType.MONSTRE ? 'COST' : (card.cardType === CardType.MANA ? 'VALUE' : null),
       effects: (card.effects || []).map(effect => this.transformEffectForExport(effect, actionsMap, conditionParamsMap, effectParamsMap)),
       imageUrl: card.imageUrl || ''
     };

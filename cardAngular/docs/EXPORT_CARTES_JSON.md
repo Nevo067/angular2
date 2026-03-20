@@ -6,7 +6,7 @@ L’export est déclenché depuis **Gestion des Cartes** via le bouton **Exporte
 
 | Champ           | Type   | Description |
 |-----------------|--------|-------------|
-| `exportVersion` | string | Version du schéma d’export (`1.1` à partir de l’ajout `cardType`, `hitPoints`, `manaValue`). |
+| `exportVersion` | string | Version du schéma d’export (`1.2` avec contextualisation de `manaValue` via `manaValueRole`). |
 | `exportDate`    | string | Date/heure ISO 8601 du moment de l’export. |
 | `cards`         | array  | Liste des objets carte (voir ci-dessous). |
 
@@ -14,6 +14,7 @@ L’export est déclenché depuis **Gestion des Cartes** via le bouton **Exporte
 
 - **1.0** : champs carte sans `cardType`, `hitPoints`, `manaValue` explicites dans l’ancien format (certaines propriétés pouvaient être absentes).
 - **1.1** : inclut systématiquement `cardType`, `hitPoints` et `manaValue` (valeur `null` si non applicable).
+- **1.2** : ajoute `manaValueRole` pour expliciter l’interprétation de `manaValue` (`COST` pour Monstre, `VALUE` pour Mana).
 
 Les outils qui lisent l’export doivent ignorer les champs inconnus pour rester compatibles avec les futures versions.
 
@@ -30,15 +31,17 @@ Les outils qui lisent l’export doivent ignorer les champs inconnus pour rester
 | `attackPoints`   | number         | oui         | Points d’attaque (0 si non monstre). |
 | `defensePoints`  | number         | oui         | Points de défense (0 si non monstre). |
 | `hitPoints`      | number \| null | oui (v1.1)  | **PV** : renseigné pour les cartes **Monstre** ; `null` pour Magic/Mana ou si non défini. |
-| `manaValue`      | number \| null | oui (v1.1)  | Valeur mana pour les cartes **Mana** ; `null` sinon. |
+| `level`          | number \| null | oui (v1.2+) | Niveau des cartes **Monstre** (1 à 4) ; `null` pour Magic/Mana. |
+| `manaValue`      | number \| null | oui (v1.1)  | Pour **Monstre**: coût en mana. Pour **Mana**: valeur de mana fournie. `null` sinon. |
+| `manaValueRole`  | string \| null | oui (v1.2)  | `COST` (Monstre), `VALUE` (Mana), `null` (autres). |
 | `effects`        | array          | oui         | Effets liés (structure détaillée ci-dessous). |
 | `imageUrl`       | string         | oui         | URL relative ou absolue de l’image. |
 
 ### Règles par type de carte
 
-- **MONSTRE** : `monsterType`, `attackPoints`, `defensePoints` et `hitPoints` sont généralement renseignés ; `manaValue` est `null`.
+- **MONSTRE** : `monsterType`, `attackPoints`, `defensePoints`, `hitPoints` et `level` (1..4) sont généralement renseignés ; `manaValue` représente le coût (`manaValueRole=COST`).
 - **MAGIC** : stats monstre souvent à 0 / vides ; `hitPoints` et `manaValue` en `null`.
-- **MANA** : `manaValue` > 0 en général ; stats monstre à 0 ; `hitPoints` en `null`.
+- **MANA** : `manaValue` > 0 en général ; stats monstre à 0 ; `hitPoints` en `null` (`manaValueRole=VALUE`).
 
 ## Effet (`effects[]`)
 
@@ -54,11 +57,11 @@ Chaque effet contient notamment :
 
 Les paramètres reprennent les codes de définition et valeurs (`parameterDefinitionCode`, `valueString`, `valueNumber`, `enumOptionCode`).
 
-## Exemple minimal (v1.1)
+## Exemple minimal (v1.2)
 
 ```json
 {
-  "exportVersion": "1.1",
+  "exportVersion": "1.2",
   "exportDate": "2026-03-18T12:00:00.000Z",
   "cards": [
     {
@@ -71,7 +74,9 @@ Les paramètres reprennent les codes de définition et valeurs (`parameterDefini
       "attackPoints": 5,
       "defensePoints": 4,
       "hitPoints": 12,
-      "manaValue": null,
+      "level": 3,
+      "manaValue": 3,
+      "manaValueRole": "COST",
       "effects": [],
       "imageUrl": "/api/files/images/xxx.png"
     },
@@ -85,7 +90,9 @@ Les paramètres reprennent les codes de définition et valeurs (`parameterDefini
       "attackPoints": 0,
       "defensePoints": 0,
       "hitPoints": null,
+      "level": null,
       "manaValue": 1,
+      "manaValueRole": "VALUE",
       "effects": [],
       "imageUrl": ""
     }

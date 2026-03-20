@@ -96,6 +96,7 @@ export class CardEditDialogComponent implements OnInit {
       attackPoints: [0], // Optionnel par défaut, sera rendu requis si MONSTRE
       defensePoints: [0], // Optionnel par défaut, sera rendu requis si MONSTRE
       hitPoints: [1], // Points de vie, requis pour les cartes Monstre
+      level: [null as number | null], // Niveau du monstre (1 à 4)
       manaValue: [null as number | null], // Pour les cartes Mana
       tags: [''], // Champ pour les tags (séparés par des virgules)
       imageUrl: [''],
@@ -125,6 +126,7 @@ export class CardEditDialogComponent implements OnInit {
       const attackPointsControl = this.cardForm.get('attackPoints');
       const defensePointsControl = this.cardForm.get('defensePoints');
       const hitPointsControl = this.cardForm.get('hitPoints');
+      const levelControl = this.cardForm.get('level');
 
       const manaValueControl = this.cardForm.get('manaValue');
       if (cardType === CardType.MAGIC) {
@@ -136,6 +138,8 @@ export class CardEditDialogComponent implements OnInit {
         defensePointsControl?.setValidators([Validators.min(0)]);
         hitPointsControl?.clearValidators();
         hitPointsControl?.setValue(null, { emitEvent: false });
+        levelControl?.clearValidators();
+        levelControl?.setValue(null, { emitEvent: false });
         manaValueControl?.clearValidators();
         manaValueControl?.setValue(null, { emitEvent: false });
 
@@ -152,6 +156,8 @@ export class CardEditDialogComponent implements OnInit {
         defensePointsControl?.setValidators([Validators.min(0)]);
         hitPointsControl?.clearValidators();
         hitPointsControl?.setValue(null, { emitEvent: false });
+        levelControl?.clearValidators();
+        levelControl?.setValue(null, { emitEvent: false });
         manaValueControl?.clearValidators();
         manaValueControl?.setValidators([Validators.min(1)]);
 
@@ -164,8 +170,8 @@ export class CardEditDialogComponent implements OnInit {
         attackPointsControl?.setValidators([Validators.required, Validators.min(0)]);
         defensePointsControl?.setValidators([Validators.required, Validators.min(0)]);
         hitPointsControl?.setValidators([Validators.required, Validators.min(1)]);
-        manaValueControl?.clearValidators();
-        manaValueControl?.setValue(null, { emitEvent: false });
+        levelControl?.setValidators([Validators.required, Validators.min(1), Validators.max(4)]);
+        manaValueControl?.setValidators([Validators.required, Validators.min(1)]);
       }
 
       // Mettre à jour l'état de validation
@@ -173,6 +179,7 @@ export class CardEditDialogComponent implements OnInit {
       attackPointsControl?.updateValueAndValidity({ emitEvent: false });
       defensePointsControl?.updateValueAndValidity({ emitEvent: false });
       hitPointsControl?.updateValueAndValidity({ emitEvent: false });
+      levelControl?.updateValueAndValidity({ emitEvent: false });
       manaValueControl?.updateValueAndValidity({ emitEvent: false });
     });
   }
@@ -455,7 +462,7 @@ export class CardEditDialogComponent implements OnInit {
 
     // Préparer la requête en fonction du type de carte
     const isNonMonster = formValue.cardType === CardType.MAGIC || formValue.cardType === CardType.MANA;
-    const isMana = formValue.cardType === CardType.MANA;
+    const usesManaValue = formValue.cardType === CardType.MANA || formValue.cardType === CardType.MONSTRE;
     const request: CreateCardWithImageRequest = {
       name: formValue.name,
       cardType: formValue.cardType,
@@ -469,9 +476,10 @@ export class CardEditDialogComponent implements OnInit {
         monsterType: formValue.monsterType,
         attackPoints: formValue.attackPoints,
         defensePoints: formValue.defensePoints,
-        hitPoints: formValue.hitPoints != null ? Number(formValue.hitPoints) : 1
+        hitPoints: formValue.hitPoints != null ? Number(formValue.hitPoints) : 1,
+        ...(formValue.level != null ? { level: Number(formValue.level) } : {})
       }),
-      ...(isMana && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
+      ...(usesManaValue && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
     };
 
     console.log('📦 Requête complète:', request);
@@ -521,8 +529,10 @@ export class CardEditDialogComponent implements OnInit {
     if (formValue.cardType === CardType.MONSTRE) {
       if (!formValue.monsterType || formValue.attackPoints === null || formValue.attackPoints === undefined ||
           formValue.defensePoints === null || formValue.defensePoints === undefined ||
-          formValue.hitPoints == null || formValue.hitPoints === undefined || formValue.hitPoints < 1) {
-        this.snackBar.open('Veuillez remplir tous les champs obligatoires pour une carte Monstre (dont PV >= 1)', 'Fermer', { duration: 3000 });
+          formValue.hitPoints == null || formValue.hitPoints === undefined || formValue.hitPoints < 1 ||
+          formValue.level == null || formValue.level === undefined || formValue.level < 1 || formValue.level > 4 ||
+          formValue.manaValue == null || formValue.manaValue === undefined || formValue.manaValue < 1) {
+        this.snackBar.open('Veuillez remplir tous les champs obligatoires pour une carte Monstre (level 1-4, PV >= 1 et coût mana >= 1)', 'Fermer', { duration: 3000 });
         this.markFormGroupTouched();
         return;
       }
@@ -555,7 +565,7 @@ export class CardEditDialogComponent implements OnInit {
 
     // Préparer les données en fonction du type de carte
     const isNonMonster = formValue.cardType === CardType.MAGIC || formValue.cardType === CardType.MANA;
-    const isMana = formValue.cardType === CardType.MANA;
+    const usesManaValue = formValue.cardType === CardType.MANA || formValue.cardType === CardType.MONSTRE;
     const cardData: any = {
       id: formValue.id,
       name: formValue.name,
@@ -570,9 +580,10 @@ export class CardEditDialogComponent implements OnInit {
         monsterType: formValue.monsterType,
         attackPoints: formValue.attackPoints,
         defensePoints: formValue.defensePoints,
-        hitPoints: formValue.hitPoints != null ? Number(formValue.hitPoints) : 1
+        hitPoints: formValue.hitPoints != null ? Number(formValue.hitPoints) : 1,
+        ...(formValue.level != null ? { level: Number(formValue.level) } : {})
       }),
-      ...(isMana && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
+      ...(usesManaValue && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
     };
 
     console.log('📦 Données de carte à sauvegarder:', cardData);
@@ -600,8 +611,10 @@ export class CardEditDialogComponent implements OnInit {
     if (formValue.cardType === CardType.MONSTRE) {
       if (!formValue.monsterType || formValue.attackPoints === null || formValue.attackPoints === undefined ||
           formValue.defensePoints === null || formValue.defensePoints === undefined ||
-          formValue.hitPoints == null || formValue.hitPoints === undefined || formValue.hitPoints < 1) {
-        this.snackBar.open('Veuillez remplir tous les champs obligatoires pour une carte Monstre (dont PV >= 1)', 'Fermer', { duration: 3000 });
+          formValue.hitPoints == null || formValue.hitPoints === undefined || formValue.hitPoints < 1 ||
+          formValue.level == null || formValue.level === undefined || formValue.level < 1 || formValue.level > 4 ||
+          formValue.manaValue == null || formValue.manaValue === undefined || formValue.manaValue < 1) {
+        this.snackBar.open('Veuillez remplir tous les champs obligatoires pour une carte Monstre (level 1-4, PV >= 1 et coût mana >= 1)', 'Fermer', { duration: 3000 });
         this.markFormGroupTouched();
         return;
       }
@@ -657,7 +670,7 @@ export class CardEditDialogComponent implements OnInit {
 
         // Préparer les données en fonction du type de carte
         const isNonMonster = formValue.cardType === CardType.MAGIC || formValue.cardType === CardType.MANA;
-        const isMana = formValue.cardType === CardType.MANA;
+        const usesManaValue = formValue.cardType === CardType.MANA || formValue.cardType === CardType.MONSTRE;
         const cardData: any = {
           id: formValue.id,
           name: formValue.name,
@@ -671,9 +684,10 @@ export class CardEditDialogComponent implements OnInit {
             monsterType: formValue.monsterType,
             attackPoints: formValue.attackPoints,
             defensePoints: formValue.defensePoints,
-            hitPoints: formValue.hitPoints != null ? Number(formValue.hitPoints) : 1
+            hitPoints: formValue.hitPoints != null ? Number(formValue.hitPoints) : 1,
+            ...(formValue.level != null ? { level: Number(formValue.level) } : {})
           }),
-          ...(isMana && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
+          ...(usesManaValue && formValue.manaValue != null ? { manaValue: Number(formValue.manaValue) } : {})
         };
 
         console.log('📦 Données de carte à sauvegarder (avec nouvelle image):', cardData);
@@ -759,10 +773,14 @@ export class CardEditDialogComponent implements OnInit {
         const attackPoints = this.cardForm.get('attackPoints')?.value;
         const defensePoints = this.cardForm.get('defensePoints')?.value;
         const hitPoints = this.cardForm.get('hitPoints')?.value;
+        const level = this.cardForm.get('level')?.value;
+        const manaValue = this.cardForm.get('manaValue')?.value;
 
         if (!monsterType || attackPoints === null || attackPoints === undefined ||
             defensePoints === null || defensePoints === undefined ||
-            hitPoints == null || hitPoints === undefined || hitPoints < 1) {
+            hitPoints == null || hitPoints === undefined || hitPoints < 1 ||
+            level == null || level === undefined || level < 1 || level > 4 ||
+            manaValue == null || manaValue === undefined || manaValue < 1) {
           return false;
         }
       }
