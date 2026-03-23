@@ -101,6 +101,10 @@ export class CardDetailDialogComponent implements OnInit {
     return this.card?.cardType === CardType.MANA;
   }
 
+  get isMagicCard(): boolean {
+    return this.card?.cardType === CardType.MAGIC;
+  }
+
   get tagsAsString(): string {
     if (!this.card?.tags) {
       return 'Aucun tag';

@@ -50,8 +50,20 @@
             <label>Type de monstre :</label>
             <span>{{ getMonsterTypeLabel(card.monsterType) }}</span>
           </div>
+          <div class="info-item" *ngIf="isMonsterCard && card.level != null">
+            <label>Level :</label>
+            <span>{{ card.level }}</span>
+          </div>
           <div class="info-item" *ngIf="isManaCard && card.manaValue != null">
             <label>Valeur mana :</label>
+            <span>{{ card.manaValue }} mana</span>
+          </div>
+          <div class="info-item" *ngIf="isMonsterCard && card.manaValue != null">
+            <label>Coût en mana :</label>
+            <span>{{ card.manaValue }} mana</span>
+          </div>
+          <div class="info-item" *ngIf="isMagicCard && card.manaValue != null">
+            <label>Coût en mana :</label>
             <span>{{ card.manaValue }} mana</span>
           </div>
           <div class="info-item full-width">

@@ -19,6 +19,7 @@ export interface Card {
   effects: Effect[];
   manaValue?: number;
   hitPoints?: number;
+  level?: number;
 }
 
 /**
@@ -35,6 +36,7 @@ export interface CreateCardRequest {
   imageUrl?: string;
   effects?: { id: number }[];
   hitPoints?: number;
+  level?: number;
 }
 
 /**
@@ -53,6 +55,7 @@ export interface UpdateCardRequest {
   effects?: { id: number }[];
   manaValue?: number;
   hitPoints?: number;
+  level?: number;
 }
 
 /**
@@ -79,6 +82,7 @@ export interface CreateCardWithImageRequest {
   attackPoints?: number;
   defensePoints?: number;
   hitPoints?: number;
+  level?: number;
   // Pour les cartes Mana
   manaValue?: number;
 }

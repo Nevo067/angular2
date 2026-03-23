@@ -174,6 +174,30 @@
 
             <div class="form-row" *ngIf="isMonsterCard">
               <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Coût en mana</mat-label>
+                <input matInput type="number" formControlName="manaValue" min="1" placeholder="Ex: 1, 2, 3">
+                <mat-hint>Mana nécessaire pour jouer cette carte Monstre</mat-hint>
+                <mat-error *ngIf="hasError('manaValue', 'required')">
+                  {{ getErrorMessage('manaValue') }}
+                </mat-error>
+                <mat-error *ngIf="hasError('manaValue', 'min')">Minimum 1</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row" *ngIf="isMagicCard">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Coût en mana</mat-label>
+                <input matInput type="number" formControlName="manaValue" min="1" placeholder="Ex: 1, 2, 3">
+                <mat-hint>Mana nécessaire pour jouer cette carte Magic</mat-hint>
+                <mat-error *ngIf="hasError('manaValue', 'required')">
+                  {{ getErrorMessage('manaValue') }}
+                </mat-error>
+                <mat-error *ngIf="hasError('manaValue', 'min')">Minimum 1</mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row" *ngIf="isMonsterCard">
+              <mat-form-field appearance="outline" class="half-width">
                 <mat-label>Points d'attaque</mat-label>
                 <input matInput type="number" formControlName="attackPoints" min="0">
                 <mat-error *ngIf="hasError('attackPoints', 'required')">
@@ -202,6 +226,15 @@
                   {{ getErrorMessage('hitPoints') }}
                 </mat-error>
                 <mat-error *ngIf="hasError('hitPoints', 'min')">Minimum 1 PV</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Level</mat-label>
+                <input matInput type="number" formControlName="level" min="1" max="4" placeholder="1 à 4">
+                <mat-error *ngIf="hasError('level', 'required')">
+                  {{ getErrorMessage('level') }}
+                </mat-error>
+                <mat-error *ngIf="hasError('level', 'min') || hasError('level', 'max')">Level entre 1 et 4</mat-error>
               </mat-form-field>
             </div>
 
