@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConditionCardService } from '../../../../core/services';
 import { ConditionCard } from '../../../../core/models';
@@ -113,7 +114,8 @@ export class ConditionListComponent implements OnInit {
   constructor(
     private conditionCardService: ConditionCardService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -257,10 +259,13 @@ export class ConditionListComponent implements OnInit {
     }
   }
 
-  navigateToParameters(condition: ConditionCard): void {
-    if (condition.id) {
-      this.router.navigate(['/conditions', condition.id, 'parameters']);
-    }
+  navigateToParameters(_condition: ConditionCard): void {
+    this.snackBar.open(
+      'Les paramètres de condition sont définis pour chaque effet. Ouvrez « Effets », puis « Paramètres » sur un effet qui lie cette condition.',
+      'OK',
+      { duration: 7000 }
+    );
+    this.router.navigate(['/effects']);
   }
 
   private manageConditionRelations(condition: ConditionCard): void {

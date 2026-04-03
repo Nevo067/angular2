@@ -7,9 +7,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { forkJoin } from 'rxjs';
-import { EffectParameterService, ParameterDefinitionService, EffectService } from '../../../../core/services';
-import { EffectParameterValueDTO, ParameterDefinitionDTO, ActionParameterValueDTO, ConditionParameterValueDTO, Effect, ActionCard } from '../../../../core/models';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { ConditionParameterService, EffectParameterService, ParameterDefinitionService, EffectService } from '../../../../core/services';
+import {
+  EffectParameterValueDTO,
+  ParameterDefinitionDTO,
+  ActionParameterValueDTO,
+  ConditionParameterValueDTO,
+  Effect,
+  ActionCard,
+  EffectCondition
+} from '../../../../core/models';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 import { ParameterDefinitionEditDialogComponent } from '../../../parameters/components/parameter-definition-edit-dialog/parameter-definition-edit-dialog.component';
 
@@ -34,6 +43,7 @@ export class EffectParametersPageComponent implements OnInit {
   effect: Effect | null = null;
   definitions: ParameterDefinitionDTO[] = [];
   actionParameters: Map<number, EffectParameterValueDTO[]> = new Map();
+  conditionParameters: Map<number, ConditionParameterValueDTO[]> = new Map();
   loading = true;
 
   constructor(
@@ -41,6 +51,7 @@ export class EffectParametersPageComponent implements OnInit {
     private router: Router,
     private effectService: EffectService,
     private defs: ParameterDefinitionService,
+    private conditionParameterService: ConditionParameterService,
     private svc: EffectParameterService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
@@ -53,18 +64,16 @@ export class EffectParametersPageComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    
-    // Charger l'effet, les définitions et tous les paramètres en parallèle
+
     forkJoin({
-      effect: this.effectService.getEffectById(this.effectId),
+      effect: this.effectService.getEffectComplete(this.effectId),
       definitions: this.defs.listDefinitions(),
       allParameters: this.svc.listAll(this.effectId)
     }).subscribe({
       next: ({ effect, definitions, allParameters }) => {
         this.effect = effect;
         this.definitions = definitions;
-        
-        // Grouper les paramètres par actionId
+
         this.actionParameters.clear();
         allParameters.forEach(param => {
           const actionId = param.actionId;
@@ -73,8 +82,32 @@ export class EffectParametersPageComponent implements OnInit {
           }
           this.actionParameters.get(actionId)!.push(param);
         });
-        
-        this.loading = false;
+
+        const conds = this.getConditions();
+        if (conds.length === 0) {
+          this.conditionParameters.clear();
+          this.loading = false;
+          return;
+        }
+
+        forkJoin(
+          conds.map(c =>
+            this.conditionParameterService.list(this.effectId, c.conditionId).pipe(
+              catchError(() => of([] as ConditionParameterValueDTO[])),
+              map(params => ({ cid: c.conditionId, params }))
+            )
+          )
+        ).subscribe({
+          next: rows => {
+            this.conditionParameters.clear();
+            rows.forEach(r => this.conditionParameters.set(r.cid, r.params));
+            this.loading = false;
+          },
+          error: () => {
+            this.conditionParameters.clear();
+            this.loading = false;
+          }
+        });
       },
       error: (error) => {
         console.error('Erreur lors du chargement:', error);
@@ -93,8 +126,73 @@ export class EffectParametersPageComponent implements OnInit {
     return this.effect?.actions || [];
   }
 
+  getConditions(): EffectCondition[] {
+    const e = this.effect;
+    if (!e) {
+      return [];
+    }
+    if (e.conditions?.length) {
+      return e.conditions;
+    }
+    return (e.conditionCards || []).map(c => ({
+      conditionId: c.id,
+      nameCondition: c.nameCondition,
+      description: c.description
+    }));
+  }
+
   getActionParameters(actionId: number): EffectParameterValueDTO[] {
     return this.actionParameters.get(actionId) || [];
+  }
+
+  getConditionParameters(conditionId: number): ConditionParameterValueDTO[] {
+    return this.conditionParameters.get(conditionId) || [];
+  }
+
+  onSaveCondition(conditionId: number, payload: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]): void {
+    const conditionParams = payload.filter((p): p is ConditionParameterValueDTO => {
+      return !('effectId' in p) && !('actionId' in p);
+    }) as ConditionParameterValueDTO[];
+
+    if (conditionParams.length === 0) {
+      return;
+    }
+
+    const tasks = conditionParams.map(p => this.conditionParameterService.upsert(this.effectId, conditionId, p));
+    let done = 0;
+    let errors = 0;
+
+    tasks.forEach(obs => obs.subscribe({
+      next: () => {
+        done++;
+        if (done + errors === tasks.length) {
+          this.conditionParameterService.list(this.effectId, conditionId).subscribe({
+            next: params => this.conditionParameters.set(conditionId, params)
+          });
+          if (errors === 0) {
+            this.snackBar.open('✓ Paramètres de condition enregistrés', 'Fermer', {
+              duration: 3000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['success-snackbar']
+            });
+          }
+        }
+      },
+      error: () => {
+        errors++;
+        if (done + errors === tasks.length) {
+          this.snackBar.open('✕ Erreur enregistrement paramètres condition', 'Fermer', {
+            duration: 4000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      }
+    }));
+  }
+
+  openConditionParametersPage(conditionId: number): void {
+    this.router.navigate(['/effects', this.effectId, 'conditions', conditionId, 'parameters']);
   }
 
   onSave(actionId: number, payload: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]): void {

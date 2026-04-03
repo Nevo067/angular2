@@ -18,10 +18,10 @@
     (sortChange)="onSortChange($event)">
     
     <ng-template #expandedRow let-row>
-      <app-parameter-display 
-        [ownerId]="row.id" 
-        [ownerType]="'condition'">
-      </app-parameter-display>
+      <p class="hint-expanded">
+        Les valeurs de paramètres dépendent de la liaison <strong>effet + condition</strong>.
+        Utilisez <strong>Effets → Paramètres</strong> (ou le lien « Ouvrir la page paramètres » par condition).
+      </p>
     </ng-template>
   </app-data-table>
 </div>

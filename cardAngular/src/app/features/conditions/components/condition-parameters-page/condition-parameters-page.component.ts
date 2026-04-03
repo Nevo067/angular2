@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConditionParameterService, ParameterDefinitionService } from '../../../../core/services';
 import { ConditionParameterValueDTO, ParameterDefinitionDTO, ActionParameterValueDTO, EffectParameterValueDTO } from '../../../../core/models';
-import { RouterModule } from '@angular/router';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 
 @Component({
@@ -15,6 +14,7 @@ import { ParameterEditorComponent } from '../../../../shared/components/paramete
   imports: [CommonModule, RouterModule, ParameterEditorComponent, MatSnackBarModule]
 })
 export class ConditionParametersPageComponent implements OnInit {
+  effectId!: number;
   conditionId!: number;
   definitions: ParameterDefinitionDTO[] = [];
   values: ConditionParameterValueDTO[] = [];
@@ -28,7 +28,8 @@ export class ConditionParametersPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.conditionId = Number(this.route.snapshot.paramMap.get('id'));
+    this.effectId = Number(this.route.snapshot.paramMap.get('effectId'));
+    this.conditionId = Number(this.route.snapshot.paramMap.get('conditionId'));
     this.load();
   }
 
@@ -36,23 +37,30 @@ export class ConditionParametersPageComponent implements OnInit {
     this.loading = true;
     this.defs.listDefinitions().subscribe(defs => {
       this.definitions = defs;
-      this.svc.list(this.conditionId).subscribe(vals => {
-        this.values = vals;
-        this.loading = false;
+      this.svc.list(this.effectId, this.conditionId).subscribe({
+        next: vals => {
+          this.values = vals;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.snackBar.open('Impossible de charger les paramètres (liaison effet/condition introuvable ?)', 'Fermer', {
+            duration: 5000
+          });
+        }
       });
     });
   }
 
   onSave(payload: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]): void {
-    // Filtrer uniquement les ConditionParameterValueDTO
     const conditionParams = payload.filter((p): p is ConditionParameterValueDTO => {
-      return !('effectId' in p) && !('actionId' in p) && !('action' in p);
+      return !('effectId' in p) && !('actionId' in p);
     }) as ConditionParameterValueDTO[];
-    
-    const tasks = conditionParams.map(p => this.svc.upsert(this.conditionId, p));
+
+    const tasks = conditionParams.map(p => this.svc.upsert(this.effectId, this.conditionId, p));
     let done = 0;
     let errors = 0;
-    
+
     tasks.forEach(obs => obs.subscribe({
       next: () => {
         done++;
@@ -91,5 +99,3 @@ export class ConditionParametersPageComponent implements OnInit {
     }));
   }
 }
-
-

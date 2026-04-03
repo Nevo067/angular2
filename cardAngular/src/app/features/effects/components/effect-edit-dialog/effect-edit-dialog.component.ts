@@ -91,11 +91,12 @@ export class EffectEditDialogComponent implements OnInit {
       // Charger les conditions associées
       const conditionsArray = this.effectForm.get('selectedConditions') as FormArray;
       conditionsArray.clear();
-      if (this.data.effect.conditionCards) {
-        this.data.effect.conditionCards.forEach(condition => {
-          conditionsArray.push(this.fb.control(condition.id));
-        });
-      }
+      const conds = this.data.effect.conditions?.length
+        ? this.data.effect.conditions.map(c => c.conditionId)
+        : (this.data.effect.conditionCards || []).map(c => c.id);
+      conds.forEach(cid => {
+        conditionsArray.push(this.fb.control(cid));
+      });
 
       // Charger les actions associées
       const actionsArray = this.effectForm.get('selectedActions') as FormArray;

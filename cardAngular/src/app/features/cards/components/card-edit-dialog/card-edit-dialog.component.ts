@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { Card, CreateCardWithImageRequest, Effect, ConditionCard } from '../../../../core/models';
+import { Card, CreateCardWithImageRequest, Effect, ConditionCard, getEffectConditionsForDisplay } from '../../../../core/models';
 import { CardType, MonsterType, ElementType } from '../../../../core/enums';
 import { ActionCardService, ConditionCardService, FileService, CardService, EffectService } from '../../../../core/services';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -744,7 +744,18 @@ export class CardEditDialogComponent implements OnInit {
 
   getEffectConditions(effectId: number): ConditionCard[] {
     const effect = this.availableEffects.find(e => e.id === effectId);
-    return effect && effect.conditionCards ? effect.conditionCards : [];
+    if (!effect) {
+      return [];
+    }
+    return getEffectConditionsForDisplay(effect).map(r => ({
+      id: r.id,
+      nameCondition: r.nameCondition || '',
+      description: r.description || ''
+    }));
+  }
+
+  getEffectConditionCount(effect: Effect): number {
+    return getEffectConditionsForDisplay(effect).length;
   }
 
   getEffectActions(effectId: number): any[] {

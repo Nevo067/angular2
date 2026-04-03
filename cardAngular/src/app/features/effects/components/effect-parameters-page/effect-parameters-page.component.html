@@ -21,10 +21,44 @@
     </div>
   </div>
 
-  <div class="content-section" *ngIf="effect && getActions().length > 0; else noActions">
-    <div class="info-box">
+  <div class="content-section" *ngIf="effect && (getConditions().length > 0 || getActions().length > 0); else noActions">
+    <div class="info-box" *ngIf="getConditions().length > 0">
+      <mat-icon>rule</mat-icon>
+      <p>Paramètres des <strong>conditions</strong> : ils sont propres à chaque liaison effet/condition. Vous pouvez éditer ici ou ouvrir la page dédiée.</p>
+    </div>
+
+    <div class="conditions-list" *ngIf="getConditions().length > 0 && definitions.length > 0">
+      <h3 class="subsection-title">Conditions</h3>
+      <mat-expansion-panel *ngFor="let cond of getConditions()" class="action-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>rule</mat-icon>
+            <span>{{ cond.nameCondition || ('Condition #' + cond.conditionId) }}</span>
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ getConditionParameters(cond.conditionId).length }} paramètre(s) configuré(s)
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <p class="action-description" *ngIf="cond.description">{{ cond.description }}</p>
+        <button mat-stroked-button color="primary" type="button" (click)="openConditionParametersPage(cond.conditionId)" class="open-page-btn">
+          <mat-icon>open_in_new</mat-icon>
+          Ouvrir la page paramètres (plein écran)
+        </button>
+        <div class="action-parameters-content">
+          <app-parameter-editor
+            [ownerType]="'condition'"
+            [ownerId]="cond.conditionId"
+            [definitions]="definitions"
+            [currentValues]="getConditionParameters(cond.conditionId)"
+            (save)="onSaveCondition(cond.conditionId, $event)">
+          </app-parameter-editor>
+        </div>
+      </mat-expansion-panel>
+    </div>
+
+    <div class="info-box" *ngIf="getActions().length > 0">
       <mat-icon>info</mat-icon>
-      <p>Configurez les paramètres pour chaque action associée à cet effet. Les paramètres sont spécifiques à chaque combinaison effet/action.</p>
+      <p>Configurez les paramètres pour chaque <strong>action</strong> associée à cet effet. Les paramètres sont spécifiques à chaque combinaison effet/action.</p>
     </div>
 
     <div class="actions-list" *ngIf="definitions.length > 0; else noDefinitions">
@@ -71,8 +105,8 @@
   <ng-template #noActions>
     <div class="empty-state">
       <mat-icon class="empty-icon">sports_mma</mat-icon>
-      <h3>Aucune action associée à cet effet</h3>
-      <p>Pour configurer des paramètres, vous devez d'abord associer des actions à cet effet.</p>
+      <h3>Aucune condition ni action associée à cet effet</h3>
+      <p>Pour configurer des paramètres, associez au moins une condition (paramètres par liaison) ou une action (paramètres effet/action).</p>
       <a mat-raised-button color="primary" [routerLink]="['/effects']">
         <mat-icon>arrow_back</mat-icon>
         Retour aux effets

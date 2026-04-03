@@ -1,5 +1,8 @@
 <div class="page" *ngIf="!loading; else loadingTpl">
-  <h2>Paramètres de la condition #{{ conditionId }}</h2>
+  <p class="breadcrumb">
+    <a [routerLink]="['/effects', effectId, 'parameters']">← Retour aux paramètres de l'effet</a>
+  </p>
+  <h2>Paramètres — effet #{{ effectId }}, condition #{{ conditionId }}</h2>
   <app-parameter-editor
     [ownerType]="'condition'"
     [ownerId]="conditionId"

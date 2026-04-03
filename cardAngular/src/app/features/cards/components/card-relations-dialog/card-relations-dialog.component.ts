@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CardService, EffectService } from '../../../../core/services';
-import { Card, Effect } from '../../../../core/models';
+import { Card, Effect, getEffectConditionsForDisplay } from '../../../../core/models';
 
 export interface CardRelationsDialogData {
   card: Card;
@@ -73,7 +73,7 @@ export class CardRelationsDialogComponent implements OnInit {
   }
 
   getEffectConditionsCount(effect: Effect): number {
-    return effect.conditionCards?.length || 0;
+    return getEffectConditionsForDisplay(effect).length;
   }
 
   getEffectActionsCount(effect: Effect): number {

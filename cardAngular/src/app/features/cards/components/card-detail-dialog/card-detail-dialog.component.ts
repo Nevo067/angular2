@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Card, ActionCard, ConditionCard } from '../../../../core/models';
+import { Card, ActionCard, ConditionCard, Effect, getEffectConditionsForDisplay } from '../../../../core/models';
 import { CardType, MonsterType, ElementType } from '../../../../core/enums';
 import { ActionCardService, ConditionCardService } from '../../../../core/services';
 import { forkJoin } from 'rxjs';
@@ -117,6 +117,10 @@ export class CardDetailDialogComponent implements OnInit {
 
   onClose(): void {
     this.dialogRef.close();
+  }
+
+  getEffectConditionCount(effect: Effect): number {
+    return getEffectConditionsForDisplay(effect).length;
   }
 }
 

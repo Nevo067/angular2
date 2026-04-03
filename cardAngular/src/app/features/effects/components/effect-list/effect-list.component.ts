@@ -43,7 +43,7 @@ export class EffectListComponent implements OnInit {
         sortable: true
       },
       {
-        key: 'conditionCards',
+        key: 'conditions',
         label: 'Conditions',
         type: 'chip',
         formatter: (value: any[]) => {
@@ -195,7 +195,7 @@ export class EffectListComponent implements OnInit {
       }).pipe(
         map(relations => ({
           ...effect,
-          conditionCards: relations.conditions,
+          conditions: relations.conditions,
           actions: relations.actions
         }))
       )
@@ -209,7 +209,7 @@ export class EffectListComponent implements OnInit {
         completeEffects.forEach((effect, index) => {
           console.log(`  Effet ${index + 1} (ID: ${effect.id}):`, {
             name: effect.effectName,
-            conditionCards: effect.conditionCards?.length || 0,
+            conditions: effect.conditions?.length || 0,
             actions: effect.actions?.length || 0
           });
         });
@@ -234,7 +234,7 @@ export class EffectListComponent implements OnInit {
         // Mettre à jour l'effet dans la liste
         const effect = this.effects.find(e => e.id === effectId);
         if (effect) {
-          effect.conditionCards = conditions;
+          effect.conditions = conditions;
         }
       },
       error: (error) => {
@@ -369,13 +369,13 @@ export class EffectListComponent implements OnInit {
     console.log('Voir conditions de l\'effet:', effect);
 
     // Si l'effet n'a pas de conditions chargées, essayer de les charger
-    if (!effect.conditionCards || effect.conditionCards.length === 0) {
+    if (!effect.conditions || effect.conditions.length === 0) {
       console.log('🔄 Chargement des conditions...');
       this.loadEffectConditions(effect.id);
     }
 
     // Afficher un message temporaire ou ouvrir un dialog
-    const conditionsText = effect.conditionCards?.map(c => c.nameCondition || 'Condition sans nom').join('\n') || 'Aucune condition';
+    const conditionsText = effect.conditions?.map(c => c.nameCondition || 'Condition sans nom').join('\n') || 'Aucune condition';
     alert(`Conditions de l'effet "${effect.effectName}":\n${conditionsText}`);
   }
 
@@ -503,7 +503,7 @@ export class EffectListComponent implements OnInit {
         next: (newEffect) => {
           console.log('✅ Effet créé avec succès:', newEffect);
           console.log('🔍 Relations dans la réponse de création:', {
-            conditionCards: newEffect.conditionCards?.length || 0,
+            conditions: newEffect.conditions?.length || newEffect.conditionCards?.length || 0,
             actions: newEffect.actions?.length || 0
           });
 

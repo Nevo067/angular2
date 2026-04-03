@@ -29,13 +29,13 @@
       </div>
 
       <!-- Conditions associées -->
-      <div class="relations-section" *ngIf="data.effect.conditionCards && data.effect.conditionCards.length > 0">
+      <div class="relations-section" *ngIf="conditionRows.length > 0">
         <h3 class="section-title">
           <mat-icon>rule</mat-icon>
-          Conditions associées ({{ data.effect.conditionCards.length }})
+          Conditions associées ({{ conditionRows.length }})
         </h3>
         <div class="relations-grid">
-          <div *ngFor="let condition of data.effect.conditionCards; let i = index"
+          <div *ngFor="let condition of conditionRows; let i = index"
                class="relation-card condition-card">
             <div class="card-header">
               <div class="order-badge">{{ i + 1 }}</div>
@@ -48,7 +48,7 @@
         </div>
       </div>
 
-      <div class="no-data" *ngIf="!data.effect.conditionCards || data.effect.conditionCards.length === 0">
+      <div class="no-data" *ngIf="conditionRows.length === 0">
         <mat-icon>rule</mat-icon>
         <p>Aucune condition associée</p>
       </div>

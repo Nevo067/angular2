@@ -160,10 +160,10 @@
             </div>
             <div class="card-content">
               <p class="card-description">{{ effect.description }}</p>
-              <div class="effect-meta" *ngIf="effect.conditionCards || effect.actions">
-                <span class="meta-badge" *ngIf="effect.conditionCards">
+              <div class="effect-meta" *ngIf="getEffectConditionCount(effect) > 0 || effect.actions">
+                <span class="meta-badge" *ngIf="getEffectConditionCount(effect) > 0">
                   <mat-icon>rule</mat-icon>
-                  {{ effect.conditionCards.length }} condition(s)
+                  {{ getEffectConditionCount(effect) }} condition(s)
                 </span>
                 <span class="meta-badge" *ngIf="effect.actions">
                   <mat-icon>sports_mma</mat-icon>

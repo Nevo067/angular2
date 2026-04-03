@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin } from 'rxjs';
 import { EffectService, ConditionCardService, ActionCardService } from '../../../../core/services';
-import { Effect, ConditionCard, ActionCard } from '../../../../core/models';
+import { Effect, ConditionCard, ActionCard, getEffectConditionsForDisplay } from '../../../../core/models';
 
 export interface EffectRelationsDialogData {
   effect: Effect;
@@ -68,7 +68,7 @@ export class EffectRelationsDialogComponent implements OnInit {
 
   private initializeSelectedItems(): void {
     // Initialiser les sélections avec les relations actuelles de l'effet
-    this.selectedConditionIds = this.effect.conditionCards?.map(c => c.id) || [];
+    this.selectedConditionIds = getEffectConditionsForDisplay(this.effect).map(c => c.id);
     this.selectedActionIds = this.effect.actions?.map(a => a.id) || [];
   }
 

@@ -15,8 +15,8 @@ const routes: Routes = [
   { path: 'actions', component: ActionListComponent },
   { path: 'actions/:id/parameters', component: ActionParametersPageComponent },
   { path: 'conditions', component: ConditionListComponent },
-  { path: 'conditions/:id/parameters', component: ConditionParametersPageComponent },
   { path: 'effects', component: EffectListComponent },
+  { path: 'effects/:effectId/conditions/:conditionId/parameters', component: ConditionParametersPageComponent },
   { path: 'effects/:id/parameters', component: EffectParametersPageComponent },
   { path: 'parameters', component: ParameterDefinitionListComponent },
   { path: '**', redirectTo: '/cards' }

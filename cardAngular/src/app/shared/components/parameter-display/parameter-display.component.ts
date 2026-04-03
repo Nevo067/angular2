@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActionParameterService, ConditionParameterService, ParameterDefinitionService } from '../../../core/services';
 import { ActionParameterValueDTO, ConditionParameterValueDTO, ParameterDefinitionDTO } from '../../../core/models';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 
 type OwnerType = 'action' | 'condition';
 
@@ -26,6 +26,8 @@ interface ParameterDisplay {
 export class ParameterDisplayComponent implements OnInit {
   @Input() ownerId!: number;
   @Input() ownerType!: OwnerType;
+  /** Requis si ownerType === 'condition' (paramètres par liaison effet/condition). */
+  @Input() effectId?: number;
 
   parameters: ParameterDisplay[] = [];
   loading = true;
@@ -45,9 +47,12 @@ export class ParameterDisplayComponent implements OnInit {
     this.loading = true;
     this.error = false;
 
-    const valuesObservable = this.ownerType === 'action'
-      ? this.actionParameterService.list(this.ownerId)
-      : this.conditionParameterService.list(this.ownerId);
+    const valuesObservable =
+      this.ownerType === 'action'
+        ? this.actionParameterService.list(this.ownerId)
+        : this.ownerType === 'condition' && this.effectId != null
+          ? this.conditionParameterService.list(this.effectId, this.ownerId)
+          : of([]);
 
     forkJoin({
       values: valuesObservable,

@@ -332,32 +332,35 @@ export class CardListComponent implements OnInit {
     });
   }
 
-  private async loadConditionParameters(cards: Card[]): Promise<Map<number, any[]>> {
-    const conditionParamsMap = new Map<number, any[]>();
-    
-    // Collecter tous les IDs de conditions uniques
-    const conditionIds = new Set<number>();
+  private async loadConditionParameters(cards: Card[]): Promise<Map<string, any[]>> {
+    const conditionParamsMap = new Map<string, any[]>();
+    const pairs = new Set<string>();
+
     cards.forEach(card => {
       card.effects?.forEach(effect => {
-        effect.conditionCards?.forEach(condition => {
-          if (condition.id) {
-            conditionIds.add(condition.id);
-          }
-        });
+        if (!effect.id) {
+          return;
+        }
+        const ids: number[] = effect.conditions?.length
+          ? effect.conditions.map(c => c.conditionId)
+          : (effect.conditionCards || []).map(c => c.id);
+        ids.filter(Boolean).forEach(cid => pairs.add(`${effect.id}-${cid}`));
       });
     });
 
-    // Charger les paramètres pour chaque condition
-    const loadPromises = Array.from(conditionIds).map(conditionId => 
-      this.conditionParameterService.list(conditionId).toPromise().then(
+    const loadPromises = Array.from(pairs).map(key => {
+      const [effectIdStr, conditionIdStr] = key.split('-');
+      const effectId = Number(effectIdStr);
+      const conditionId = Number(conditionIdStr);
+      return this.conditionParameterService.list(effectId, conditionId).toPromise().then(
         params => {
           if (params) {
-            conditionParamsMap.set(conditionId, params);
+            conditionParamsMap.set(key, params);
           }
           return null;
         }
-      ).catch(() => null)
-    );
+      ).catch(() => null);
+    });
 
     await Promise.all(loadPromises);
     return conditionParamsMap;
@@ -401,7 +404,7 @@ export class CardListComponent implements OnInit {
     return effectParamsMap;
   }
 
-  private transformCardForExport(card: Card, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<number, any[]>, effectParamsMap: Map<string, any[]>): any {
+  private transformCardForExport(card: Card, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<string, any[]>, effectParamsMap: Map<string, any[]>): any {
     return {
       id: card.id,
       name: card.name,
@@ -420,7 +423,7 @@ export class CardListComponent implements OnInit {
     };
   }
 
-  private transformEffectForExport(effect: Effect, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<number, any[]>, effectParamsMap: Map<string, any[]>): any {
+  private transformEffectForExport(effect: Effect, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<string, any[]>, effectParamsMap: Map<string, any[]>): any {
     // Collecter tous les paramètres d'effet pour cet effet
     const effectParametersByAction: any = {};
     if (effect.actions) {
@@ -440,20 +443,33 @@ export class CardListComponent implements OnInit {
       });
     }
 
+    const conditionRows =
+      effect.conditions?.length
+        ? effect.conditions
+        : (effect.conditionCards || []).map(c => ({
+            conditionId: c.id,
+            nameCondition: c.nameCondition,
+            description: c.description,
+            parameters: [] as any[]
+          }));
+
     const effectData: any = {
       id: effect.id,
       effectName: effect.effectName || '',
       description: effect.description || '',
-      conditionCards: (effect.conditionCards || []).map(condition => {
-        const conditionParams = conditionParamsMap.get(condition.id || 0) || [];
-        
+      conditionCards: conditionRows.map((condition: any) => {
+        const cid = condition.conditionId ?? condition.id;
+        const key = `${effect.id}-${cid}`;
+        const embedded = condition.parameters;
+        const conditionParams =
+          embedded && embedded.length > 0 ? embedded : conditionParamsMap.get(key) || [];
+
         const conditionData: any = {
-          id: condition.id,
+          id: cid,
           nameCondition: condition.nameCondition || '',
           description: condition.description || ''
         };
-        
-        // Ajouter les paramètres seulement s'il y en a
+
         if (conditionParams.length > 0) {
           conditionData.parameters = conditionParams.map((param: any) => ({
             parameterDefinitionCode: param.parameterDefinitionCode,
@@ -462,7 +478,7 @@ export class CardListComponent implements OnInit {
             enumOptionCode: param.enumOptionCode ?? null
           }));
         }
-        
+
         return conditionData;
       }),
       actions: (effect.actions || []).map(action => {
