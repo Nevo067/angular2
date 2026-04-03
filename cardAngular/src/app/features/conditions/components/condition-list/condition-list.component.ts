@@ -3,7 +3,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { ConditionCardService } from '../../../../core/services';
-import { ConditionCard } from '../../../../core/models';
+import { ActionCard, ConditionCard } from '../../../../core/models';
+import { downloadJsonFile } from '../../../../shared/utils/download-json';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
 import { ConditionEditDialogComponent } from '../condition-edit-dialog/condition-edit-dialog.component';
@@ -20,6 +21,7 @@ import { catchError, map } from 'rxjs/operators';
 export class ConditionListComponent implements OnInit {
   conditions: ConditionCard[] = [];
   loading = false;
+  exporting = false;
 
   tableConfig: TableConfig<ConditionCard> = {
     columns: [
@@ -120,6 +122,44 @@ export class ConditionListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadConditions();
+  }
+
+  exportConditionsToJson(): void {
+    if (this.loading && this.conditions.length === 0) {
+      this.snackBar.open('Chargement en cours, patientez...', 'Fermer', { duration: 2500 });
+      return;
+    }
+    this.exporting = true;
+    try {
+      const payload = {
+        exportVersion: '1.0',
+        exportType: 'conditions' as const,
+        exportDate: new Date().toISOString(),
+        exportNote:
+          'Les paramètres numériques/texte d\'une condition liée à un effet ne sont pas exportés ici (ils dépendent de la liaison effet + condition).',
+        items: this.conditions.map((c) => this.mapConditionForExport(c))
+      };
+      downloadJsonFile(payload, 'conditions_export');
+      this.snackBar.open(`Export réussi ! ${this.conditions.length} condition(s)`, 'Fermer', { duration: 3000 });
+    } catch {
+      this.snackBar.open('Erreur lors de l\'export des conditions', 'Fermer', { duration: 3000 });
+    } finally {
+      this.exporting = false;
+    }
+  }
+
+  private mapConditionForExport(c: ConditionCard): Record<string, unknown> {
+    const actions = (c.actions || []).map((a: ActionCard) => ({
+      id: a.id,
+      actionName: a.actionName ?? '',
+      description: a.description ?? ''
+    }));
+    return {
+      id: c.id,
+      nameCondition: c.nameCondition ?? '',
+      description: c.description ?? '',
+      actions
+    };
   }
 
   loadConditions(): void {

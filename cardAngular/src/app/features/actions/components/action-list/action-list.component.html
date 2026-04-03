@@ -1,10 +1,16 @@
 <div class="action-list-container">
   <div class="header">
     <h2>Gestion des Actions</h2>
-    <button type="button" (click)="addNewAction()" class="add-action-button">
-      <span class="icon">+</span>
-      <span class="text">Nouvelle Action</span>
-    </button>
+    <div class="header-actions">
+      <button type="button" (click)="exportActionsToJson()" class="export-button" [disabled]="exporting">
+        <span class="icon">📥</span>
+        <span class="text">{{ exporting ? 'Export en cours...' : 'Exporter en JSON' }}</span>
+      </button>
+      <button type="button" (click)="addNewAction()" class="add-action-button">
+        <span class="icon">+</span>
+        <span class="text">Nouvelle Action</span>
+      </button>
+    </div>
   </div>
 
   <app-data-table

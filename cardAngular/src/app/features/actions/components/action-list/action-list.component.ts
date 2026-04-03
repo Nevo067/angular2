@@ -1,10 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
 import { ActionCardService } from '../../../../core/services';
 import { ActionCard } from '../../../../core/models';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
+import { downloadJsonFile } from '../../../../shared/utils/download-json';
 import { ActionEditDialogComponent } from '../action-edit-dialog/action-edit-dialog.component';
 
 @Component({
@@ -16,6 +19,7 @@ import { ActionEditDialogComponent } from '../action-edit-dialog/action-edit-dia
 export class ActionListComponent implements OnInit {
   actions: ActionCard[] = [];
   loading = false;
+  exporting = false;
 
   tableConfig: TableConfig<ActionCard> = {
     columns: [
@@ -93,11 +97,62 @@ export class ActionListComponent implements OnInit {
   constructor(
     private actionCardService: ActionCardService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.loadActions();
+  }
+
+  exportActionsToJson(): void {
+    this.exporting = true;
+    this.snackBar.open('Export en cours...', 'Fermer', { duration: 2000 });
+
+    this.actionCardService
+      .getAllActionsWithParameters()
+      .pipe(finalize(() => (this.exporting = false)))
+      .subscribe({
+        next: (list) => {
+          const payload = {
+            exportVersion: '1.0',
+            exportType: 'actions' as const,
+            exportDate: new Date().toISOString(),
+            items: list.map((a) => this.mapActionForExport(a))
+          };
+          downloadJsonFile(payload, 'actions_export');
+          this.snackBar.open(`Export réussi ! ${list.length} action(s)`, 'Fermer', { duration: 3000 });
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors de l\'export des actions', 'Fermer', { duration: 3000 });
+        }
+      });
+  }
+
+  private mapActionForExport(a: ActionCard): Record<string, unknown> {
+    const row: Record<string, unknown> = {
+      id: a.id,
+      actionName: a.actionName ?? '',
+      description: a.description ?? ''
+    };
+    if (a.cardCondition) {
+      const c = a.cardCondition;
+      row['cardCondition'] = {
+        id: c.id,
+        nameCondition: c.nameCondition ?? '',
+        description: c.description ?? ''
+      };
+    }
+    const params = a.parameters || [];
+    if (params.length > 0) {
+      row['parameters'] = params.map((p) => ({
+        parameterDefinitionCode: p.parameterDefinitionCode,
+        valueString: p.valueString ?? null,
+        valueNumber: p.valueNumber ?? null,
+        enumOptionCode: p.enumOptionCode ?? null
+      }));
+    }
+    return row;
   }
 
   loadActions(): void {

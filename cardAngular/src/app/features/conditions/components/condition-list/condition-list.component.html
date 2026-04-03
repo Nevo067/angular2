@@ -1,10 +1,16 @@
 <div class="condition-list-container">
   <div class="header">
     <h2>Gestion des Conditions</h2>
-    <button type="button" (click)="addNewCondition()" class="add-condition-button">
-      <span class="icon">+</span>
-      <span class="text">Nouvelle Condition</span>
-    </button>
+    <div class="header-actions">
+      <button type="button" (click)="exportConditionsToJson()" class="export-button" [disabled]="exporting">
+        <span class="icon">📥</span>
+        <span class="text">{{ exporting ? 'Export en cours...' : 'Exporter en JSON' }}</span>
+      </button>
+      <button type="button" (click)="addNewCondition()" class="add-condition-button">
+        <span class="icon">+</span>
+        <span class="text">Nouvelle Condition</span>
+      </button>
+    </div>
   </div>
 
   <app-data-table
