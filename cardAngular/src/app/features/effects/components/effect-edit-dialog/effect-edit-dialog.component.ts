@@ -2,9 +2,10 @@ import { Component, Inject, OnInit, ViewChild, ViewChildren, QueryList } from '@
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { firstValueFrom, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { Effect, ConditionCard, ActionCard, EffectParameterValueDTO, ParameterDefinitionDTO, ActionParameterValueDTO, ConditionParameterValueDTO } from '../../../../core/models';
-import { ConditionCardService, ActionCardService, EffectParameterService, ParameterDefinitionService } from '../../../../core/services';
+import { ActionParameterService, ConditionCardService, ActionCardService, EffectParameterService, ParameterDefinitionService } from '../../../../core/services';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 
 @Component({
@@ -20,6 +21,8 @@ export class EffectEditDialogComponent implements OnInit {
   availableActions: ActionCard[] = [];
   parameterDefinitions: ParameterDefinitionDTO[] = [];
   actionParameters: Map<number, EffectParameterValueDTO[]> = new Map();
+  /** Codes ParameterDefinition déclarés sur chaque carte action (filtre éditeur effet). */
+  actionCatalogCodes: Map<number, Set<string>> = new Map();
   expandedActions: Set<number> = new Set();
   @ViewChildren(ParameterEditorComponent) parameterEditors!: QueryList<ParameterEditorComponent>;
 
@@ -29,6 +32,7 @@ export class EffectEditDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: { effect?: Effect },
     private conditionCardService: ConditionCardService,
     private actionCardService: ActionCardService,
+    private actionParameterService: ActionParameterService,
     private effectParameterService: EffectParameterService,
     private parameterDefinitionService: ParameterDefinitionService,
     private router: Router
@@ -129,19 +133,25 @@ export class EffectEditDialogComponent implements OnInit {
 
     if (actions.length === 0) return;
 
-    // Charger tous les paramètres pour toutes les actions en parallèle
-    const loadTasks = actions.map(action =>
-      this.effectParameterService.list(effectId, action.id)
-    );
-
-    // Utiliser forkJoin pour charger tous les paramètres en parallèle
-    forkJoin(loadTasks).subscribe({
-      next: (results) => {
-        results.forEach((params, index) => {
-          const actionId = actions[index].id;
-          this.actionParameters.set(actionId, params);
+    forkJoin(
+      actions.map(action =>
+        forkJoin({
+          values: this.effectParameterService.list(effectId, action.id).pipe(catchError(() => of([] as EffectParameterValueDTO[]))),
+          catalog: this.actionParameterService.list(action.id).pipe(catchError(() => of([] as ActionParameterValueDTO[])))
+        }).pipe(
+          map(({ values, catalog }) => ({
+            actionId: action.id,
+            values,
+            codes: new Set(catalog.map(c => c.parameterDefinitionCode).filter((x): x is string => !!x))
+          }))
+        )
+      )
+    ).subscribe({
+      next: rows => {
+        rows.forEach(r => {
+          this.actionParameters.set(r.actionId, r.values);
+          this.actionCatalogCodes.set(r.actionId, r.codes);
         });
-        console.log('✅ Tous les paramètres préchargés:', this.actionParameters);
       },
       error: (error) => {
         console.error('❌ Erreur lors du préchargement des paramètres:', error);
@@ -153,6 +163,19 @@ export class EffectEditDialogComponent implements OnInit {
     return this.actionParameters.get(actionId) || [];
   }
 
+  getDefinitionsForAction(actionId: number): ParameterDefinitionDTO[] {
+    const codes = this.actionCatalogCodes.get(actionId);
+    if (!codes || codes.size === 0) {
+      return [];
+    }
+    return this.parameterDefinitions.filter(d => codes.has(d.code));
+  }
+
+  actionHasDeclaredParameters(actionId: number): boolean {
+    const codes = this.actionCatalogCodes.get(actionId);
+    return !!codes && codes.size > 0;
+  }
+
   toggleActionParameters(actionId: number): void {
     if (this.expandedActions.has(actionId)) {
       this.expandedActions.delete(actionId);
@@ -160,13 +183,22 @@ export class EffectEditDialogComponent implements OnInit {
       this.expandedActions.add(actionId);
       // Charger les paramètres si pas encore chargés
       if (!this.actionParameters.has(actionId) && this.data.effect?.id) {
-        this.effectParameterService.list(this.data.effect.id, actionId).subscribe({
-          next: (params) => {
-            this.actionParameters.set(actionId, params);
+        const effectId = this.data.effect.id;
+        forkJoin({
+          values: this.effectParameterService.list(effectId, actionId).pipe(catchError(() => of([] as EffectParameterValueDTO[]))),
+          catalog: this.actionParameterService.list(actionId).pipe(catchError(() => of([] as ActionParameterValueDTO[])))
+        }).subscribe({
+          next: ({ values, catalog }) => {
+            this.actionParameters.set(actionId, values);
+            this.actionCatalogCodes.set(
+              actionId,
+              new Set(catalog.map(c => c.parameterDefinitionCode).filter((x): x is string => !!x))
+            );
           },
           error: (error) => {
             console.error(`❌ Erreur lors du chargement des paramètres:`, error);
             this.actionParameters.set(actionId, []);
+            this.actionCatalogCodes.set(actionId, new Set());
           }
         });
       }

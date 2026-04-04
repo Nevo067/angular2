@@ -53,6 +53,7 @@ import { ParameterDisplayComponent } from './shared/components/parameter-display
 import { ActionParametersPageComponent } from './features/actions/components/action-parameters-page/action-parameters-page.component';
 import { ConditionParametersPageComponent } from './features/conditions/components/condition-parameters-page/condition-parameters-page.component';
 import { EffectParametersPageComponent } from './features/effects/components/effect-parameters-page/effect-parameters-page.component';
+import { ConditionParameterCatalogPageComponent } from './features/conditions/components/condition-parameter-catalog-page/condition-parameter-catalog-page.component';
 
 @NgModule({
   declarations: [
@@ -108,6 +109,7 @@ import { EffectParametersPageComponent } from './features/effects/components/eff
     ActionParametersPageComponent,
     ConditionParametersPageComponent,
     EffectParametersPageComponent,
+    ConditionParameterCatalogPageComponent,
     ParameterDefinitionListComponent
   ],
   providers: [],

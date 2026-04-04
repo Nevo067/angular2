@@ -4,6 +4,7 @@ import { CardListComponent } from './features/cards/components/card-list/card-li
 import { ActionListComponent } from './features/actions/components/action-list/action-list.component';
 import { ConditionListComponent } from './features/conditions/components/condition-list/condition-list.component';
 import { ConditionParametersPageComponent } from './features/conditions/components/condition-parameters-page/condition-parameters-page.component';
+import { ConditionParameterCatalogPageComponent } from './features/conditions/components/condition-parameter-catalog-page/condition-parameter-catalog-page.component';
 import { EffectListComponent } from './features/effects/components/effect-list/effect-list.component';
 import { EffectParametersPageComponent } from './features/effects/components/effect-parameters-page/effect-parameters-page.component';
 import { ActionParametersPageComponent } from './features/actions/components/action-parameters-page/action-parameters-page.component';
@@ -15,6 +16,7 @@ const routes: Routes = [
   { path: 'actions', component: ActionListComponent },
   { path: 'actions/:id/parameters', component: ActionParametersPageComponent },
   { path: 'conditions', component: ConditionListComponent },
+  { path: 'conditions/:id/parameter-definitions', component: ConditionParameterCatalogPageComponent },
   { path: 'effects', component: EffectListComponent },
   { path: 'effects/:effectId/conditions/:conditionId/parameters', component: ConditionParametersPageComponent },
   { path: 'effects/:id/parameters', component: EffectParametersPageComponent },

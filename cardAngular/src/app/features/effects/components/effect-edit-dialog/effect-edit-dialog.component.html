@@ -133,12 +133,18 @@
                       *ngIf="isEditMode && isActionParametersExpanded(action.id) && data.effect">
                    <div class="parameters-container">
                      <h5 class="parameters-title">Paramètres de l'action "{{ action.actionName }}"</h5>
+                     <p class="catalog-hint" *ngIf="!actionHasDeclaredParameters(action.id)">
+                       Aucun paramètre déclaré pour cette action. Définissez-les dans
+                       <a [routerLink]="['/actions', action.id, 'parameters']" target="_blank" rel="noopener noreferrer">Actions → Paramètres</a>
+                       (nouvel onglet — vous pouvez enregistrer l’effet ensuite).
+                     </p>
                      <app-parameter-editor
+                       *ngIf="actionHasDeclaredParameters(action.id)"
                        [ownerType]="'effect'"
                        [ownerId]="action.id"
                        [effectId]="data.effect.id"
                        [actionId]="action.id"
-                       [definitions]="parameterDefinitions"
+                       [definitions]="getDefinitionsForAction(action.id)"
                        [currentValues]="getActionParameters(action.id)"
                        (save)="onSaveActionParameters(action.id, $event)">
                      </app-parameter-editor>

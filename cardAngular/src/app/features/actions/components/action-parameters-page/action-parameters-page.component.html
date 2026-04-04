@@ -19,7 +19,11 @@
   <div class="content-section" *ngIf="definitions.length > 0; else noDefinitions">
     <div class="info-box">
       <mat-icon>info</mat-icon>
-      <p>Cochez les paramètres que vous souhaitez configurer pour cette action, puis saisissez leurs valeurs.</p>
+      <p>
+        Choisissez les paramètres applicables à cette <strong>carte action</strong> et saisissez ici des
+        <strong>valeurs par défaut</strong> (optionnelles). Les <strong>valeurs par effet</strong> se règlent dans
+        <strong>Effets → Paramètres</strong> ou « Modifier l’effet », une fois la même liste de paramètres définie.
+      </p>
     </div>
 
     <app-parameter-editor

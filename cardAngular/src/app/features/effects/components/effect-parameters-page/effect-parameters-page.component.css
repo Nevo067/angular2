@@ -204,5 +204,24 @@
   }
 }
 
+.catalog-hint {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #fff8e1;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+  font-size: 14px;
+  line-height: 1.5;
+}
 
+.catalog-hint a {
+  font-weight: 600;
+}
+
+.condition-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 

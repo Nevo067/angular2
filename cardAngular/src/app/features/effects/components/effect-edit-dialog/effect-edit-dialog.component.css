@@ -344,3 +344,17 @@ mat-error {
   margin-top: 16px;
   padding-top: 12px;
 }
+
+.catalog-hint {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: #fff8e1;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.catalog-hint a {
+  font-weight: 600;
+}

@@ -10,4 +10,5 @@ export * from './file.service';
 export * from './parameter-definition.service';
 export * from './action-parameter.service';
 export * from './condition-parameter.service';
+export * from './condition-parameter-catalog.service';
 export * from './effect-parameter.service';

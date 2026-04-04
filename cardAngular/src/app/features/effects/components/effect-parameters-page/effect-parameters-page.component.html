@@ -24,10 +24,13 @@
   <div class="content-section" *ngIf="effect && (getConditions().length > 0 || getActions().length > 0); else noActions">
     <div class="info-box" *ngIf="getConditions().length > 0">
       <mat-icon>rule</mat-icon>
-      <p>Paramètres des <strong>conditions</strong> : ils sont propres à chaque liaison effet/condition. Vous pouvez éditer ici ou ouvrir la page dédiée.</p>
+      <p>
+        Déclarez d’abord les paramètres utilisables sur chaque <strong>condition</strong> (menu Conditions → Paramètres).
+        Les <strong>valeurs</strong> pour cet effet se saisissent ici ou via la page plein écran par liaison effet/condition.
+      </p>
     </div>
 
-    <div class="conditions-list" *ngIf="getConditions().length > 0 && definitions.length > 0">
+    <div class="conditions-list" *ngIf="getConditions().length > 0">
       <h3 class="subsection-title">Conditions</h3>
       <mat-expansion-panel *ngFor="let cond of getConditions()" class="action-panel">
         <mat-expansion-panel-header>
@@ -40,15 +43,26 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
         <p class="action-description" *ngIf="cond.description">{{ cond.description }}</p>
-        <button mat-stroked-button color="primary" type="button" (click)="openConditionParametersPage(cond.conditionId)" class="open-page-btn">
-          <mat-icon>open_in_new</mat-icon>
-          Ouvrir la page paramètres (plein écran)
-        </button>
+        <div class="condition-actions-row">
+          <a mat-stroked-button color="primary" [routerLink]="['/conditions', cond.conditionId, 'parameter-definitions']" class="open-page-btn">
+            <mat-icon>tune</mat-icon>
+            Catalogue paramètres (condition)
+          </a>
+          <button mat-stroked-button color="primary" type="button" (click)="openConditionParametersPage(cond.conditionId)" class="open-page-btn">
+            <mat-icon>open_in_new</mat-icon>
+            Valeurs sur cet effet (plein écran)
+          </button>
+        </div>
         <div class="action-parameters-content">
+          <p class="catalog-hint" *ngIf="!conditionHasDeclaredParameters(cond.conditionId)">
+            Aucun paramètre déclaré pour cette condition. Définissez-les sur la
+            <a [routerLink]="['/conditions', cond.conditionId, 'parameter-definitions']">page paramètres de la condition</a>.
+          </p>
           <app-parameter-editor
+            *ngIf="conditionHasDeclaredParameters(cond.conditionId)"
             [ownerType]="'condition'"
             [ownerId]="cond.conditionId"
-            [definitions]="definitions"
+            [definitions]="getDefinitionsForCondition(cond.conditionId)"
             [currentValues]="getConditionParameters(cond.conditionId)"
             (save)="onSaveCondition(cond.conditionId, $event)">
           </app-parameter-editor>
@@ -58,7 +72,10 @@
 
     <div class="info-box" *ngIf="getActions().length > 0">
       <mat-icon>info</mat-icon>
-      <p>Configurez les paramètres pour chaque <strong>action</strong> associée à cet effet. Les paramètres sont spécifiques à chaque combinaison effet/action.</p>
+      <p>
+        Seuls les paramètres <strong>déjà choisis sur la carte action</strong> apparaissent ici pour saisir les
+        <strong>valeurs propres à cet effet</strong> (les valeurs par défaut au niveau action se règlent dans Actions → Paramètres).
+      </p>
     </div>
 
     <div class="actions-list" *ngIf="definitions.length > 0; else noDefinitions">
@@ -75,13 +92,18 @@
         
         <div class="action-parameters-content">
           <p class="action-description" *ngIf="action.description">{{ action.description }}</p>
-          
+          <p class="catalog-hint" *ngIf="!actionHasDeclaredParameters(action.id)">
+            Aucun paramètre déclaré pour cette action. Définissez-les dans
+            <a [routerLink]="['/actions', action.id, 'parameters']">Actions → Paramètres</a>
+            (valeurs par défaut au niveau action ; les valeurs par effet se règlent ici une fois les paramètres choisis).
+          </p>
           <app-parameter-editor
+            *ngIf="actionHasDeclaredParameters(action.id)"
             [ownerType]="'effect'"
             [ownerId]="action.id"
             [effectId]="effectId"
             [actionId]="action.id"
-            [definitions]="definitions"
+            [definitions]="getDefinitionsForAction(action.id)"
             [currentValues]="getActionParameters(action.id)"
             (save)="onSave(action.id, $event)">
           </app-parameter-editor>

@@ -1,0 +1,33 @@
+@import '../../../actions/components/action-parameters-page/action-parameters-page.component.css';
+
+.def-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.def-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.def-row:last-child {
+  border-bottom: none;
+}
+
+.def-label {
+  font-weight: 500;
+}
+
+.def-code {
+  color: #757575;
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.row-spinner {
+  flex-shrink: 0;
+}

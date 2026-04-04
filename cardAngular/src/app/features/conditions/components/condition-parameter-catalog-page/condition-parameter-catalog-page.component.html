@@ -1,0 +1,53 @@
+<div class="parameters-page-container" *ngIf="!loading; else loadingTpl">
+  <div class="header">
+    <div class="title-section">
+      <h2>Paramètres de la condition (catalogue)</h2>
+      <p class="subtitle">Condition #{{ conditionId }}</p>
+    </div>
+    <div class="actions-section">
+      <a mat-button [routerLink]="['/conditions']" class="back-link">
+        <mat-icon>arrow_back</mat-icon>
+        Retour aux conditions
+      </a>
+    </div>
+  </div>
+
+  <div class="content-section" *ngIf="definitions.length > 0; else noDefinitions">
+    <div class="info-box">
+      <mat-icon>info</mat-icon>
+      <p>
+        Cochez les paramètres que cette condition pourra utiliser. Les <strong>valeurs par effet</strong> se saisissent dans
+        <strong>Effets → Paramètres</strong> (liaison effet / condition), une fois le paramètre déclaré ici.
+      </p>
+    </div>
+
+    <ul class="def-list">
+      <li *ngFor="let d of definitions" class="def-row">
+        <mat-checkbox
+          [checked]="isLinked(d.code)"
+          [disabled]="isBusy(d.code)"
+          (change)="toggleDefinition(d, $event.checked)">
+          <span class="def-label">{{ d.label }}</span>
+          <span class="def-code">({{ d.code }})</span>
+        </mat-checkbox>
+        <mat-spinner *ngIf="isBusy(d.code)" diameter="20" class="row-spinner"></mat-spinner>
+      </li>
+    </ul>
+  </div>
+
+  <ng-template #noDefinitions>
+    <div class="empty-state">
+      <mat-icon class="empty-icon">settings_suggest</mat-icon>
+      <h3>Aucune définition de paramètre disponible</h3>
+      <p>Créez d’abord des définitions dans le menu Paramètres.</p>
+      <a mat-raised-button color="primary" [routerLink]="['/parameters']">Ouvrir les définitions</a>
+    </div>
+  </ng-template>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement...</p>
+  </div>
+</ng-template>

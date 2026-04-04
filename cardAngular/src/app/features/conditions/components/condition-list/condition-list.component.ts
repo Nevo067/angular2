@@ -299,13 +299,8 @@ export class ConditionListComponent implements OnInit {
     }
   }
 
-  navigateToParameters(_condition: ConditionCard): void {
-    this.snackBar.open(
-      'Les paramètres de condition sont définis pour chaque effet. Ouvrez « Effets », puis « Paramètres » sur un effet qui lie cette condition.',
-      'OK',
-      { duration: 7000 }
-    );
-    this.router.navigate(['/effects']);
+  navigateToParameters(condition: ConditionCard): void {
+    this.router.navigate(['/conditions', condition.id, 'parameter-definitions']);
   }
 
   private manageConditionRelations(condition: ConditionCard): void {

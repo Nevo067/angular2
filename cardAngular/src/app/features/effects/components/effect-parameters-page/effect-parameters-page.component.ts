@@ -9,7 +9,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { ConditionParameterService, EffectParameterService, ParameterDefinitionService, EffectService } from '../../../../core/services';
+import {
+  ActionParameterService,
+  ConditionParameterCatalogService,
+  ConditionParameterService,
+  EffectParameterService,
+  ParameterDefinitionService,
+  EffectService
+} from '../../../../core/services';
 import {
   EffectParameterValueDTO,
   ParameterDefinitionDTO,
@@ -17,7 +24,8 @@ import {
   ConditionParameterValueDTO,
   Effect,
   ActionCard,
-  EffectCondition
+  EffectCondition,
+  ConditionParameterCatalogEntryDTO
 } from '../../../../core/models';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 import { ParameterDefinitionEditDialogComponent } from '../../../parameters/components/parameter-definition-edit-dialog/parameter-definition-edit-dialog.component';
@@ -43,7 +51,11 @@ export class EffectParametersPageComponent implements OnInit {
   effect: Effect | null = null;
   definitions: ParameterDefinitionDTO[] = [];
   actionParameters: Map<number, EffectParameterValueDTO[]> = new Map();
+  /** Codes ParameterDefinition déclarés sur la carte action (catalogue) — filtre l’éditeur effet. */
+  actionCatalogCodes: Map<number, Set<string>> = new Map();
   conditionParameters: Map<number, ConditionParameterValueDTO[]> = new Map();
+  /** Codes autorisés par condition (catalogue back) — rempli après impl. API ; vide = pas de filtre si non chargé. */
+  conditionCatalogCodes: Map<number, Set<string>> = new Map();
   loading = true;
 
   constructor(
@@ -52,6 +64,8 @@ export class EffectParametersPageComponent implements OnInit {
     private effectService: EffectService,
     private defs: ParameterDefinitionService,
     private conditionParameterService: ConditionParameterService,
+    private actionParameterService: ActionParameterService,
+    private conditionCatalogService: ConditionParameterCatalogService,
     private svc: EffectParameterService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
@@ -83,31 +97,39 @@ export class EffectParametersPageComponent implements OnInit {
           this.actionParameters.get(actionId)!.push(param);
         });
 
-        const conds = this.getConditions();
-        if (conds.length === 0) {
-          this.conditionParameters.clear();
-          this.loading = false;
-          return;
-        }
-
-        forkJoin(
-          conds.map(c =>
-            this.conditionParameterService.list(this.effectId, c.conditionId).pipe(
-              catchError(() => of([] as ConditionParameterValueDTO[])),
-              map(params => ({ cid: c.conditionId, params }))
-            )
-          )
-        ).subscribe({
-          next: rows => {
-            this.conditionParameters.clear();
-            rows.forEach(r => this.conditionParameters.set(r.cid, r.params));
-            this.loading = false;
-          },
-          error: () => {
-            this.conditionParameters.clear();
-            this.loading = false;
+        const actions = this.getActions();
+        const loadActionCatalog = (): void => {
+          if (actions.length === 0) {
+            this.actionCatalogCodes.clear();
+            this.loadConditionBlocks();
+            return;
           }
-        });
+          forkJoin(
+            actions.map(a =>
+              this.actionParameterService.list(a.id).pipe(
+                catchError(() => of([] as ActionParameterValueDTO[])),
+                map(list => ({ actionId: a.id, list }))
+              )
+            )
+          ).subscribe({
+            next: rows => {
+              this.actionCatalogCodes.clear();
+              rows.forEach(r => {
+                const codes = new Set(
+                  r.list.map(p => p.parameterDefinitionCode).filter((c): c is string => !!c)
+                );
+                this.actionCatalogCodes.set(r.actionId, codes);
+              });
+              this.loadConditionBlocks();
+            },
+            error: () => {
+              this.actionCatalogCodes.clear();
+              this.loadConditionBlocks();
+            }
+          });
+        };
+
+        loadActionCatalog();
       },
       error: (error) => {
         console.error('Erreur lors du chargement:', error);
@@ -120,6 +142,89 @@ export class EffectParametersPageComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  /** Charge les valeurs paramètres condition (effet) et, si le service catalogue est disponible, les codes autorisés par condition. */
+  private loadConditionBlocks(): void {
+    const conds = this.getConditions();
+    if (conds.length === 0) {
+      this.conditionParameters.clear();
+      this.conditionCatalogCodes.clear();
+      this.loading = false;
+      return;
+    }
+
+    forkJoin(
+      conds.map(c =>
+        this.conditionParameterService.list(this.effectId, c.conditionId).pipe(
+          catchError(() => of([] as ConditionParameterValueDTO[])),
+          map(params => ({ cid: c.conditionId, params }))
+        )
+      )
+    ).subscribe({
+      next: rows => {
+        this.conditionParameters.clear();
+        rows.forEach(r => this.conditionParameters.set(r.cid, r.params));
+        this.loadConditionCatalogCodes(conds);
+      },
+      error: () => {
+        this.conditionParameters.clear();
+        this.conditionCatalogCodes.clear();
+        this.loading = false;
+      }
+    });
+  }
+
+  private loadConditionCatalogCodes(conds: EffectCondition[]): void {
+    forkJoin(
+      conds.map(c =>
+        this.conditionCatalogService.list(c.conditionId).pipe(
+          catchError(() => of([] as ConditionParameterCatalogEntryDTO[])),
+          map(list => ({ cid: c.conditionId, list }))
+        )
+      )
+    ).subscribe({
+      next: rows => {
+        this.conditionCatalogCodes.clear();
+        rows.forEach(r => {
+          const codes = new Set(
+            r.list.map(p => p.parameterDefinitionCode).filter((x): x is string => !!x)
+          );
+          this.conditionCatalogCodes.set(r.cid, codes);
+        });
+        this.loading = false;
+      },
+      error: () => {
+        this.conditionCatalogCodes.clear();
+        this.loading = false;
+      }
+    });
+  }
+
+  getDefinitionsForAction(actionId: number): ParameterDefinitionDTO[] {
+    const codes = this.actionCatalogCodes.get(actionId);
+    if (!codes || codes.size === 0) {
+      return [];
+    }
+    return this.definitions.filter(d => codes.has(d.code));
+  }
+
+  actionHasDeclaredParameters(actionId: number): boolean {
+    const codes = this.actionCatalogCodes.get(actionId);
+    return !!codes && codes.size > 0;
+  }
+
+  getDefinitionsForCondition(conditionId: number): ParameterDefinitionDTO[] {
+    const codes = this.conditionCatalogCodes.get(conditionId);
+    if (!codes || codes.size === 0) {
+      return [];
+    }
+    return this.definitions.filter(d => codes.has(d.code));
+  }
+
+  conditionHasDeclaredParameters(conditionId: number): boolean {
+    const codes = this.conditionCatalogCodes.get(conditionId);
+    return !!codes && codes.size > 0;
   }
 
   getActions(): ActionCard[] {
