@@ -54,14 +54,61 @@
         <textarea matInput formControlName="description" rows="3" placeholder="Description du paramètre"></textarea>
       </mat-form-field>
 
-      <div *ngIf="isEnum && isEditMode && options.length > 0" class="options-section">
-        <h4>Options disponibles</h4>
-        <div class="options-list">
-          <div *ngFor="let opt of options" class="option-item">
-            <mat-chip>{{ opt.label }}</mat-chip>
+      <div *ngIf="isEnum && isEditMode" class="options-section">
+        <div class="options-header">
+          <h4>Valeurs de l’énumération</h4>
+          <button mat-stroked-button color="primary" type="button" (click)="addOptionRow()" [disabled]="savingOptions">
+            <mat-icon>add</mat-icon>
+            Ajouter
+          </button>
+        </div>
+
+        <div class="options-help">
+          Glisse-dépose pour réordonner. Le <strong>code</strong> est la valeur technique (texte libre).
+        </div>
+
+        <div [formGroup]="optionsForm" class="options-editor">
+          <div
+            cdkDropList
+            formArrayName="items"
+            class="options-drop-list"
+            (cdkDropListDropped)="dropOption($event)">
+            <div
+              *ngFor="let group of optionItems.controls; let i = index"
+              class="option-row"
+              [formGroupName]="i"
+              cdkDrag>
+              <div class="drag-handle" cdkDragHandle>
+                <mat-icon>drag_indicator</mat-icon>
+              </div>
+
+              <mat-form-field appearance="outline" class="option-code">
+                <mat-label>Code</mat-label>
+                <input matInput formControlName="code" placeholder="ex: Draw" />
+                <mat-error *ngIf="group.get('code')?.invalid && group.get('code')?.touched">Code requis</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="option-label">
+                <mat-label>Libellé</mat-label>
+                <input matInput formControlName="label" placeholder="ex: Pioche" />
+                <mat-error *ngIf="group.get('label')?.invalid && group.get('label')?.touched">Libellé requis</mat-error>
+              </mat-form-field>
+
+              <div class="option-actions">
+                <button mat-icon-button color="primary" type="button" (click)="saveOptionRow(i)" [disabled]="savingOptions">
+                  <mat-icon>save</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" type="button" (click)="deleteOptionRow(i)" [disabled]="savingOptions">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="optionItems.length === 0" class="options-empty">
+              Aucune valeur. Clique sur “Ajouter” pour créer la première option.
+            </div>
           </div>
         </div>
-        <p class="info-text">Pour ajouter/modifier des options, utilisez l'éditeur intégré (en développement)</p>
       </div>
 
       <div *ngIf="isEnum && !isEditMode" class="info-box">

@@ -33,6 +33,20 @@ export class ParameterDefinitionService extends BaseApiService {
   deleteEnumOption(definitionCode: string, optionId: number): Observable<any> {
     return super.delete(`/parameters/definitions/${encodeURIComponent(definitionCode)}/options/${optionId}`);
   }
+
+  updateEnumOption(definitionCode: string, optionId: number, payload: Partial<EnumOptionDTO>): Observable<EnumOptionDTO> {
+    return super.put<EnumOptionDTO>(
+      `/parameters/definitions/${encodeURIComponent(definitionCode)}/options/${optionId}`,
+      payload as EnumOptionDTO
+    );
+  }
+
+  reorderEnumOptions(definitionCode: string, orderedIds: number[]): Observable<void> {
+    return super.put<void>(
+      `/parameters/definitions/${encodeURIComponent(definitionCode)}/options/reorder`,
+      { orderedIds }
+    );
+  }
 }
 
 

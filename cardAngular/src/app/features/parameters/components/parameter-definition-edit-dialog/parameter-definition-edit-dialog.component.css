@@ -32,11 +32,71 @@
   border-radius: 8px;
 }
 
+.options-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .options-section h4 {
   margin: 0 0 12px 0;
   color: var(--text-primary);
   font-size: 16px;
   font-weight: 500;
+}
+
+.options-help {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.options-editor {
+  width: 100%;
+}
+
+.options-drop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr 88px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  opacity: 0.7;
+}
+
+.option-code,
+.option-label {
+  width: 100%;
+}
+
+.option-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.options-empty {
+  padding: 10px 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .options-list {

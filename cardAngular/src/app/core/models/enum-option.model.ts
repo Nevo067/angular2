@@ -3,6 +3,7 @@ export interface EnumOptionDTO {
   code: string;
   label: string;
   parameterDefinitionCode: string;
+  sortOrder?: number;
 }
 
 

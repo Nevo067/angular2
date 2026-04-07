@@ -45,6 +45,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ReactiveFormsModule } from '@angular/forms';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 // Shared Components
 import { DataTableComponent } from './shared/components/data-table/data-table.component';
@@ -102,6 +103,7 @@ import { ConditionParameterCatalogPageComponent } from './features/conditions/co
     MatSelectModule,
     MatSnackBarModule,
     ReactiveFormsModule,
+    DragDropModule,
     RouterModule,
     // standalone components imported here
     ParameterEditorComponent,
