@@ -358,3 +358,16 @@ mat-error {
 .catalog-hint a {
   font-weight: 600;
 }
+
+.save-spinner {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+mat-dialog-actions button.mat-mdc-raised-button.mat-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}

@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConditionCard, ActionCard } from '../../../../core/models';
 import { ActionCardService } from '../../../../core/services';
 
@@ -85,10 +85,15 @@ export class ConditionEditDialogComponent implements OnInit {
   }
 
   private markFormGroupTouched(): void {
-    Object.keys(this.conditionForm.controls).forEach(key => {
-      const control = this.conditionForm.get(key);
-      control?.markAsTouched();
-    });
+    const mark = (control: AbstractControl): void => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        Object.values(control.controls).forEach(mark);
+      } else if (control instanceof FormArray) {
+        control.controls.forEach(mark);
+      }
+    };
+    mark(this.conditionForm);
   }
 
   // Méthodes pour la validation des erreurs
@@ -129,32 +134,50 @@ export class ConditionEditDialogComponent implements OnInit {
     return this.selectedActionsArray.controls.some(control => control.value === actionId);
   }
 
+  /** Même ordre que le FormArray (évite le bug filter() sur availableActions). */
   getSelectedActions(): ActionCard[] {
     const selectedIds = this.selectedActionsArray.controls.map(control => control.value);
-    return this.availableActions.filter(action => selectedIds.includes(action.id));
+    const byId = new Map(this.availableActions.map(a => [a.id, a]));
+    return selectedIds.map(id => byId.get(id)).filter((a): a is ActionCard => a != null);
   }
 
-  // Méthodes pour réorganiser l'ordre
-  moveActionUp(index: number): void {
-    if (index > 0) {
-      const actionsArray = this.selectedActionsArray;
-      const action = actionsArray.at(index);
-      actionsArray.removeAt(index);
-      actionsArray.insert(index - 1, action);
-    }
-  }
-
-  moveActionDown(index: number): void {
+  moveActionUp(actionId: number): void {
     const actionsArray = this.selectedActionsArray;
-    if (index < actionsArray.length - 1) {
-      const action = actionsArray.at(index);
+    const index = actionsArray.controls.findIndex(c => c.value === actionId);
+    if (index > 0) {
+      const ctrl = actionsArray.at(index);
       actionsArray.removeAt(index);
-      actionsArray.insert(index + 1, action);
+      actionsArray.insert(index - 1, ctrl);
     }
   }
 
-  removeAction(index: number): void {
-    this.selectedActionsArray.removeAt(index);
+  moveActionDown(actionId: number): void {
+    const actionsArray = this.selectedActionsArray;
+    const index = actionsArray.controls.findIndex(c => c.value === actionId);
+    if (index >= 0 && index < actionsArray.length - 1) {
+      const ctrl = actionsArray.at(index);
+      actionsArray.removeAt(index);
+      actionsArray.insert(index + 1, ctrl);
+    }
+  }
+
+  removeAction(actionId: number): void {
+    const arr = this.selectedActionsArray;
+    const idx = arr.controls.findIndex(c => c.value === actionId);
+    if (idx >= 0) {
+      arr.removeAt(idx);
+    }
+  }
+
+  canMoveActionUp(actionId: number): boolean {
+    const idx = this.selectedActionsArray.controls.findIndex(c => c.value === actionId);
+    return idx > 0;
+  }
+
+  canMoveActionDown(actionId: number): boolean {
+    const arr = this.selectedActionsArray;
+    const idx = arr.controls.findIndex(c => c.value === actionId);
+    return idx >= 0 && idx < arr.length - 1;
   }
 
   // Obtenir l'ordre de sélection

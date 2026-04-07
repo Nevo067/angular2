@@ -41,13 +41,13 @@
                  <p class="item-description">{{ condition.description }}</p>
                </div>
                <div class="item-actions">
-                 <button mat-icon-button (click)="moveConditionUp(i)" [disabled]="i === 0">
+                 <button mat-icon-button type="button" (click)="moveConditionUp(condition.id)" [disabled]="!canMoveConditionUp(condition.id)">
                    <mat-icon>keyboard_arrow_up</mat-icon>
                  </button>
-                 <button mat-icon-button (click)="moveConditionDown(i)" [disabled]="i === getSelectedConditions().length - 1">
+                 <button mat-icon-button type="button" (click)="moveConditionDown(condition.id)" [disabled]="!canMoveConditionDown(condition.id)">
                    <mat-icon>keyboard_arrow_down</mat-icon>
                  </button>
-                 <button mat-icon-button (click)="removeCondition(i)" color="warn">
+                 <button mat-icon-button type="button" (click)="removeCondition(condition.id)" color="warn">
                    <mat-icon>remove_circle</mat-icon>
                  </button>
                </div>
@@ -109,20 +109,20 @@
                      <p class="item-description">{{ action.description }}</p>
                    </div>
                    <div class="item-actions">
-                     <button mat-icon-button 
+                     <button mat-icon-button type="button"
                              (click)="toggleActionParameters(action.id)"
                              [matTooltip]="isActionParametersExpanded(action.id) ? 'Masquer les paramètres' : 'Afficher les paramètres'"
                              *ngIf="isEditMode"
                              [class.expanded]="isActionParametersExpanded(action.id)">
                        <mat-icon>{{ isActionParametersExpanded(action.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
                      </button>
-                     <button mat-icon-button (click)="moveActionUp(i)" [disabled]="i === 0">
+                     <button mat-icon-button type="button" (click)="moveActionUp(action.id)" [disabled]="!canMoveActionUp(action.id)">
                        <mat-icon>keyboard_arrow_up</mat-icon>
                      </button>
-                     <button mat-icon-button (click)="moveActionDown(i)" [disabled]="i === getSelectedActions().length - 1">
+                     <button mat-icon-button type="button" (click)="moveActionDown(action.id)" [disabled]="!canMoveActionDown(action.id)">
                        <mat-icon>keyboard_arrow_down</mat-icon>
                      </button>
-                     <button mat-icon-button (click)="removeAction(i)" color="warn">
+                     <button mat-icon-button type="button" (click)="removeAction(action.id)" color="warn">
                        <mat-icon>remove_circle</mat-icon>
                      </button>
                    </div>
@@ -185,10 +185,15 @@
    </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">Annuler</button>
-    <button mat-raised-button color="warn" (click)="onSave()"
-            [disabled]="effectForm.invalid">
-      {{ isEditMode ? 'Modifier' : 'Créer' }}
+    <button mat-button type="button" (click)="onCancel()">Annuler</button>
+    <button mat-raised-button color="primary" type="button" (click)="onSave()"
+            [disabled]="effectForm.invalid || saving">
+      @if (saving) {
+        <mat-spinner diameter="20" class="save-spinner"></mat-spinner>
+        <span>Enregistrement…</span>
+      } @else {
+        {{ isEditMode ? 'Modifier' : 'Créer' }}
+      }
     </button>
   </mat-dialog-actions>
 </div>

@@ -18,7 +18,10 @@ export interface ActionCard {
 export interface CreateActionCardRequest {
   actionName: string;
   description: string;
-  cardConditionId: number;
+  /** @deprecated côté API : liaisons = {@link conditionIds} ; conservé pour les anciens écrans */
+  cardConditionId?: number;
+  /** Ordre conservé ; absent = aucune liaison à la création */
+  conditionIds?: number[];
 }
 
 /**
@@ -28,5 +31,7 @@ export interface UpdateActionCardRequest {
   id: number;
   actionName: string;
   description: string;
-  cardConditionId: number;
+  cardConditionId?: number;
+  /** Si absent, le back ne modifie pas les liaisons condition ↔ action */
+  conditionIds?: number[];
 }

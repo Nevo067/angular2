@@ -6,7 +6,7 @@ import { ConditionParameterCatalogEntryDTO } from '../models';
 @Injectable({ providedIn: 'root' })
 export class ConditionParameterCatalogService extends BaseApiService {
   list(conditionId: number): Observable<ConditionParameterCatalogEntryDTO[]> {
-    return this.get<ConditionParameterCatalogEntryDTO[]>(`/api/conditions/${conditionId}/parameter-definitions`);
+    return this.get<ConditionParameterCatalogEntryDTO[]>(`/conditions/${conditionId}/parameter-definitions`);
   }
 
   add(conditionId: number, body: { parameterDefinitionCode: string }): Observable<ConditionParameterCatalogEntryDTO> {
@@ -14,6 +14,6 @@ export class ConditionParameterCatalogService extends BaseApiService {
   }
 
   remove(conditionId: number, linkId: number): Observable<unknown> {
-    return this.delete(`/api/conditions/${conditionId}/parameter-definitions/${linkId}`);
+    return this.delete(`/conditions/${conditionId}/parameter-definitions/${linkId}`);
   }
 }

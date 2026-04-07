@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -29,6 +29,7 @@ import {
 } from '../../../../core/models';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 import { ParameterDefinitionEditDialogComponent } from '../../../parameters/components/parameter-definition-edit-dialog/parameter-definition-edit-dialog.component';
+import { UiFeedbackService } from '../../../../shared/services/ui-feedback.service';
 
 @Component({
   selector: 'app-effect-parameters-page',
@@ -68,7 +69,7 @@ export class EffectParametersPageComponent implements OnInit {
     private conditionCatalogService: ConditionParameterCatalogService,
     private svc: EffectParameterService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private ui: UiFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -133,12 +134,7 @@ export class EffectParametersPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Erreur lors du chargement:', error);
-        this.snackBar.open('✕ Erreur lors du chargement des données', 'Fermer', {
-          duration: 4000,
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-          panelClass: ['error-snackbar']
-        });
+        this.ui.showError('✕ Erreur lors du chargement des données');
         this.loading = false;
       }
     });
@@ -275,22 +271,14 @@ export class EffectParametersPageComponent implements OnInit {
             next: params => this.conditionParameters.set(conditionId, params)
           });
           if (errors === 0) {
-            this.snackBar.open('✓ Paramètres de condition enregistrés', 'Fermer', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
+            this.ui.showSuccess('✓ Paramètres de condition enregistrés');
           }
         }
       },
       error: () => {
         errors++;
         if (done + errors === tasks.length) {
-          this.snackBar.open('✕ Erreur enregistrement paramètres condition', 'Fermer', {
-            duration: 4000,
-            panelClass: ['error-snackbar']
-          });
+          this.ui.showError('✕ Erreur enregistrement paramètres condition');
         }
       }
     }));
@@ -328,19 +316,9 @@ export class EffectParametersPageComponent implements OnInit {
           });
           
           if (errors === 0) {
-            this.snackBar.open('✓ Paramètres enregistrés avec succès', 'Fermer', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
+            this.ui.showSuccess('✓ Paramètres enregistrés avec succès');
           } else {
-            this.snackBar.open(`⚠ ${done} paramètre(s) enregistré(s), ${errors} erreur(s)`, 'Fermer', {
-              duration: 4000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['warning-snackbar']
-            });
+            this.ui.showWarning(`⚠ ${done} paramètre(s) enregistré(s), ${errors} erreur(s)`);
           }
         }
       },
@@ -355,12 +333,7 @@ export class EffectParametersPageComponent implements OnInit {
             }
           });
           
-          this.snackBar.open('✕ Erreur lors de l\'enregistrement des paramètres', 'Fermer', {
-            duration: 4000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
+          this.ui.showError('✕ Erreur lors de l\'enregistrement des paramètres');
         }
       }
     }));
@@ -389,12 +362,7 @@ export class EffectParametersPageComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Erreur lors de la création:', error);
-        this.snackBar.open('Erreur lors de la création de la définition: ' + (error.message || 'Erreur inconnue'), 'Fermer', {
-          duration: 4000,
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-          panelClass: ['error-snackbar']
-        });
+        this.ui.showError('Erreur lors de la création de la définition: ' + (error.message || 'Erreur inconnue'));
       }
     });
   }

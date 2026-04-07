@@ -7,19 +7,19 @@ import { EffectParameterValueDTO } from '../models';
 export class EffectParameterService extends BaseApiService {
 
   list(effectId: number, actionId: number): Observable<EffectParameterValueDTO[]> {
-    return this.get<EffectParameterValueDTO[]>(`/api/effects/${effectId}/actions/${actionId}/parameters`);
+    return this.get<EffectParameterValueDTO[]>(`/effects/${effectId}/actions/${actionId}/parameters`);
   }
 
   listAll(effectId: number): Observable<EffectParameterValueDTO[]> {
-    return this.get<EffectParameterValueDTO[]>(`/api/effects/${effectId}/parameters`);
+    return this.get<EffectParameterValueDTO[]>(`/effects/${effectId}/parameters`);
   }
 
   upsert(effectId: number, actionId: number, payload: EffectParameterValueDTO): Observable<EffectParameterValueDTO> {
-    return this.post<EffectParameterValueDTO>(`/api/effects/${effectId}/actions/${actionId}/parameters`, payload);
+    return this.post<EffectParameterValueDTO>(`/effects/${effectId}/actions/${actionId}/parameters`, payload);
   }
 
   remove(effectId: number, actionId: number, id: number): Observable<any> {
-    return super.delete(`/api/effects/${effectId}/actions/${actionId}/parameters/${id}`);
+    return super.delete(`/effects/${effectId}/actions/${actionId}/parameters/${id}`);
   }
 }
 

@@ -5,11 +5,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ConditionParameterCatalogService, ParameterDefinitionService } from '../../../../core/services';
 import { ConditionParameterCatalogEntryDTO, ParameterDefinitionDTO } from '../../../../core/models';
+import { UiFeedbackService } from '../../../../shared/services/ui-feedback.service';
 
 @Component({
   selector: 'app-condition-parameter-catalog-page',
@@ -37,7 +38,7 @@ export class ConditionParameterCatalogPageComponent implements OnInit {
     private route: ActivatedRoute,
     private defs: ParameterDefinitionService,
     private catalog: ConditionParameterCatalogService,
-    private snackBar: MatSnackBar
+    private ui: UiFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -58,7 +59,7 @@ export class ConditionParameterCatalogPageComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.snackBar.open('✕ Erreur lors du chargement', 'Fermer', { duration: 4000, panelClass: ['error-snackbar'] });
+        this.ui.showError('✕ Erreur lors du chargement');
       }
     });
   }
@@ -88,7 +89,7 @@ export class ConditionParameterCatalogPageComponent implements OnInit {
         },
         error: () => {
           this.busyCodes.delete(code);
-          this.snackBar.open('✕ Impossible d’ajouter le paramètre', 'Fermer', { duration: 4000, panelClass: ['error-snackbar'] });
+          this.ui.showError('✕ Impossible d’ajouter le paramètre');
         }
       });
     } else {
@@ -104,7 +105,7 @@ export class ConditionParameterCatalogPageComponent implements OnInit {
         },
         error: () => {
           this.busyCodes.delete(code);
-          this.snackBar.open('✕ Impossible de retirer le paramètre', 'Fermer', { duration: 4000, panelClass: ['error-snackbar'] });
+          this.ui.showError('✕ Impossible de retirer le paramètre');
         }
       });
     }

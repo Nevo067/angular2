@@ -41,13 +41,13 @@
                  <p class="item-description">{{ action.description }}</p>
                </div>
                <div class="item-actions">
-                 <button mat-icon-button (click)="moveActionUp(i)" [disabled]="i === 0">
+                 <button mat-icon-button type="button" (click)="moveActionUp(action.id)" [disabled]="!canMoveActionUp(action.id)">
                    <mat-icon>keyboard_arrow_up</mat-icon>
                  </button>
-                 <button mat-icon-button (click)="moveActionDown(i)" [disabled]="i === getSelectedActions().length - 1">
+                 <button mat-icon-button type="button" (click)="moveActionDown(action.id)" [disabled]="!canMoveActionDown(action.id)">
                    <mat-icon>keyboard_arrow_down</mat-icon>
                  </button>
-                 <button mat-icon-button (click)="removeAction(i)" color="warn">
+                 <button mat-icon-button type="button" (click)="removeAction(action.id)" color="warn">
                    <mat-icon>remove_circle</mat-icon>
                  </button>
                </div>
@@ -85,8 +85,8 @@
    </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">Annuler</button>
-    <button mat-raised-button color="accent" (click)="onSave()"
+    <button mat-button type="button" (click)="onCancel()">Annuler</button>
+    <button mat-raised-button color="accent" type="button" (click)="onSave()"
             [disabled]="conditionForm.invalid">
       {{ isEditMode ? 'Modifier' : 'Créer' }}
     </button>

@@ -54,13 +54,14 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()" [disabled]="loading">
+    <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
       Annuler
     </button>
     <button mat-raised-button
+            type="button"
             color="primary"
             (click)="onSave()"
-            [disabled]="loading">
+            [disabled]="loading || !listsReady">
       <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
       <span *ngIf="!loading">Sauvegarder</span>
     </button>

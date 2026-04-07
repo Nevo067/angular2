@@ -7,15 +7,15 @@ import { ActionParameterValueDTO } from '../models';
 export class ActionParameterService extends BaseApiService {
 
   list(actionId: number): Observable<ActionParameterValueDTO[]> {
-    return this.get<ActionParameterValueDTO[]>(`/api/actions/${actionId}/parameters`);
+    return this.get<ActionParameterValueDTO[]>(`/actions/${actionId}/parameters`);
   }
 
   upsert(actionId: number, payload: ActionParameterValueDTO): Observable<ActionParameterValueDTO> {
-    return this.post<ActionParameterValueDTO>(`/api/actions/${actionId}/parameters`, payload);
+    return this.post<ActionParameterValueDTO>(`/actions/${actionId}/parameters`, payload);
   }
 
   remove(actionId: number, id: number): Observable<any> {
-    return super.delete(`/api/actions/${actionId}/parameters/${id}`);
+    return super.delete(`/actions/${actionId}/parameters/${id}`);
   }
 }
 

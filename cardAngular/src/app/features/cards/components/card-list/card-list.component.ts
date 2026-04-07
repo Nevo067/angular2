@@ -641,6 +641,11 @@ export class CardListComponent implements OnInit {
         },
         error: (error: any) => {
           console.error('Erreur lors de la modification:', error);
+          this.snackBar.open(
+            'Impossible d’enregistrer la carte : ' + (error?.message || 'erreur serveur'),
+            'Fermer',
+            { duration: 6000, panelClass: ['error-snackbar'] }
+          );
         }
       });
     } else {
@@ -720,20 +725,24 @@ export class CardListComponent implements OnInit {
     }
 
     const promises = actions.map(action => {
-      const actionData = {
-        ...action,
-        cardId: cardId
-      };
+      const actionName = action.name ?? action.actionName ?? '';
+      const description = action.description ?? '';
 
       if (action.id) {
-        // Modification d'une action existante
         console.log('📝 Modification de l\'action:', action.id);
-        return this.actionCardService.updateAction(actionData).toPromise();
-      } else {
-        // Création d'une nouvelle action
-        console.log('➕ Création d\'une nouvelle action');
-        return this.actionCardService.createAction(actionData).toPromise();
+        return this.actionCardService.updateAction({
+          id: action.id,
+          actionName,
+          description,
+          cardConditionId: action.cardConditionId ?? action.cardCondition?.id ?? 0
+        } as any).toPromise();
       }
+      console.log('➕ Création d\'une nouvelle action');
+      return this.actionCardService.createAction({
+        actionName,
+        description,
+        cardConditionId: action.cardConditionId ?? action.cardCondition?.id ?? 0
+      } as any).toPromise();
     });
 
     try {
@@ -752,20 +761,22 @@ export class CardListComponent implements OnInit {
     }
 
     const promises = conditions.map(condition => {
-      const conditionData = {
-        ...condition,
-        cardId: cardId
-      };
+      const nameCondition = condition.name ?? condition.nameCondition ?? '';
+      const description = condition.description ?? '';
 
       if (condition.id) {
-        // Modification d'une condition existante
         console.log('📝 Modification de la condition:', condition.id);
-        return this.conditionCardService.updateCondition(conditionData).toPromise();
-      } else {
-        // Création d'une nouvelle condition
-        console.log('➕ Création d\'une nouvelle condition');
-        return this.conditionCardService.createCondition(conditionData).toPromise();
+        return this.conditionCardService.updateCondition({
+          id: condition.id,
+          nameCondition,
+          description
+        } as any).toPromise();
       }
+      console.log('➕ Création d\'une nouvelle condition');
+      return this.conditionCardService.createCondition({
+        nameCondition,
+        description
+      } as any).toPromise();
     });
 
     try {

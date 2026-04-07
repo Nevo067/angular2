@@ -7,14 +7,14 @@ import { ConditionParameterValueDTO } from '../models';
 export class ConditionParameterService extends BaseApiService {
 
   list(effectId: number, conditionId: number): Observable<ConditionParameterValueDTO[]> {
-    return this.get<ConditionParameterValueDTO[]>(`/api/effects/${effectId}/conditions/${conditionId}/parameters`);
+    return this.get<ConditionParameterValueDTO[]>(`/effects/${effectId}/conditions/${conditionId}/parameters`);
   }
 
   upsert(effectId: number, conditionId: number, payload: ConditionParameterValueDTO): Observable<ConditionParameterValueDTO> {
-    return this.post<ConditionParameterValueDTO>(`/api/effects/${effectId}/conditions/${conditionId}/parameters`, payload);
+    return this.post<ConditionParameterValueDTO>(`/effects/${effectId}/conditions/${conditionId}/parameters`, payload);
   }
 
   remove(effectId: number, conditionId: number, id: number): Observable<unknown> {
-    return super.delete(`/api/effects/${effectId}/conditions/${conditionId}/parameters/${id}`);
+    return super.delete(`/effects/${effectId}/conditions/${conditionId}/parameters/${id}`);
   }
 }

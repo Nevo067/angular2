@@ -5,12 +5,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActionParameterService, ParameterDefinitionService } from '../../../../core/services';
 import { ActionParameterValueDTO, ParameterDefinitionDTO, ConditionParameterValueDTO, EffectParameterValueDTO } from '../../../../core/models';
 import { RouterModule } from '@angular/router';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
 import { ParameterDefinitionEditDialogComponent } from '../../../parameters/components/parameter-definition-edit-dialog/parameter-definition-edit-dialog.component';
+import { UiFeedbackService } from '../../../../shared/services/ui-feedback.service';
 
 @Component({
   selector: 'app-action-parameters-page',
@@ -30,7 +31,7 @@ export class ActionParametersPageComponent implements OnInit {
     private defs: ParameterDefinitionService,
     private svc: ActionParameterService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private ui: UiFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -66,19 +67,9 @@ export class ActionParametersPageComponent implements OnInit {
         if (done + errors === tasks.length) {
           this.load();
           if (errors === 0) {
-            this.snackBar.open('✓ Paramètres enregistrés avec succès', 'Fermer', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
+            this.ui.showSuccess('✓ Paramètres enregistrés avec succès');
           } else {
-            this.snackBar.open(`⚠ ${done} paramètre(s) enregistré(s), ${errors} erreur(s)`, 'Fermer', {
-              duration: 4000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['warning-snackbar']
-            });
+            this.ui.showWarning(`⚠ ${done} paramètre(s) enregistré(s), ${errors} erreur(s)`);
           }
         }
       },
@@ -87,12 +78,7 @@ export class ActionParametersPageComponent implements OnInit {
         console.error('Erreur lors de l\'enregistrement:', error);
         if (done + errors === tasks.length) {
           this.load();
-          this.snackBar.open('✕ Erreur lors de l\'enregistrement des paramètres', 'Fermer', {
-            duration: 4000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
+          this.ui.showError('✕ Erreur lors de l\'enregistrement des paramètres');
         }
       }
     }));
@@ -121,7 +107,7 @@ export class ActionParametersPageComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Erreur lors de la création:', error);
-        alert('Erreur lors de la création de la définition: ' + (error.message || 'Erreur inconnue'));
+        this.ui.showError('Erreur lors de la création de la définition: ' + (error.message || 'Erreur inconnue'));
       }
     });
   }

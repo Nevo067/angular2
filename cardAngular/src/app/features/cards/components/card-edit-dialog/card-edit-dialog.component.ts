@@ -331,11 +331,11 @@ export class CardEditDialogComponent implements OnInit {
   private createActionFormGroup(action?: any): FormGroup {
     return this.fb.group({
       id: [action?.id || null],
-      name: [action?.name || '', [Validators.required]],
+      name: [action?.actionName ?? action?.name ?? '', [Validators.required]],
       description: [action?.description || '', [Validators.required]],
-      cost: [action?.cost || 0, [Validators.min(0)]],
-      damage: [action?.damage || 0, [Validators.min(0)]],
-      healing: [action?.healing || 0, [Validators.min(0)]]
+      cost: [action?.cost ?? 0, [Validators.min(0)]],
+      damage: [action?.damage ?? 0, [Validators.min(0)]],
+      healing: [action?.healing ?? 0, [Validators.min(0)]]
     });
   }
 
@@ -355,10 +355,10 @@ export class CardEditDialogComponent implements OnInit {
   private createConditionFormGroup(condition?: any): FormGroup {
     return this.fb.group({
       id: [condition?.id || null],
-      name: [condition?.name || '', [Validators.required]],
+      name: [condition?.nameCondition ?? condition?.name ?? '', [Validators.required]],
       description: [condition?.description || '', [Validators.required]],
-      duration: [condition?.duration || 1, [Validators.min(1)]],
-      effect: [condition?.effect || '', [Validators.required]]
+      duration: [condition?.duration ?? 1, [Validators.min(1)]],
+      effect: [condition?.effect || '']
     });
   }
 
@@ -453,7 +453,7 @@ export class CardEditDialogComponent implements OnInit {
       }
     }
 
-    // Préparer les effets au format attendu par l'API
+    // Toujours envoyer le tableau (éventuellement vide) pour que le back remplace la liste ; ne pas omettre le champ.
     const effects = this.selectedEffectIds.map(id => ({ id }));
 
     console.log('🎯 Effets sélectionnés:', this.selectedEffectIds);
@@ -469,7 +469,7 @@ export class CardEditDialogComponent implements OnInit {
       tags: tags,
       image: this.selectedImages[0],
       imageName: this.selectedImages[0].name,
-      effects: effects.length > 0 ? effects : undefined,
+      effects,
       // Inclure monsterType, attackPoints, defensePoints et hitPoints seulement pour les cartes Monstre
       ...(isNonMonster ? {} : {
         monsterType: formValue.monsterType,
@@ -556,7 +556,6 @@ export class CardEditDialogComponent implements OnInit {
       }
     }
 
-    // Préparer les effets au format attendu par l'API
     const effects = this.selectedEffectIds.map(id => ({ id }));
 
     console.log('🎯 Effets sélectionnés (oldMethod):', this.selectedEffectIds);
@@ -573,7 +572,7 @@ export class CardEditDialogComponent implements OnInit {
       elementType: formValue.elementType,
       imageUrl: primaryImageUrl,
       tags: tags,
-      effects: effects.length > 0 ? effects : undefined,
+      effects,
       // Inclure monsterType, attackPoints, defensePoints et hitPoints seulement pour les cartes Monstre
       ...(isNonMonster ? {} : {
         monsterType: formValue.monsterType,
@@ -671,7 +670,6 @@ export class CardEditDialogComponent implements OnInit {
           }
         }
 
-        // Préparer les effets au format attendu par l'API
         const effects = this.selectedEffectIds.map(id => ({ id }));
 
         // Préparer les données en fonction du type de carte
@@ -685,7 +683,7 @@ export class CardEditDialogComponent implements OnInit {
           elementType: formValue.elementType,
           imageUrl: imageUrl, // Utiliser la nouvelle URL d'image
           tags: tags,
-          effects: effects.length > 0 ? effects : undefined,
+          effects,
           ...(isNonMonster ? {} : {
             monsterType: formValue.monsterType,
             attackPoints: formValue.attackPoints,

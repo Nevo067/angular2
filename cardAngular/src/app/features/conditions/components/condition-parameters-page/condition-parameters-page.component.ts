@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConditionParameterService, ParameterDefinitionService } from '../../../../core/services';
 import { ConditionParameterValueDTO, ParameterDefinitionDTO, ActionParameterValueDTO, EffectParameterValueDTO } from '../../../../core/models';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
+import { UiFeedbackService } from '../../../../shared/services/ui-feedback.service';
 
 @Component({
   selector: 'app-condition-parameters-page',
@@ -24,7 +25,7 @@ export class ConditionParametersPageComponent implements OnInit {
     private route: ActivatedRoute,
     private defs: ParameterDefinitionService,
     private svc: ConditionParameterService,
-    private snackBar: MatSnackBar
+    private ui: UiFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -44,9 +45,7 @@ export class ConditionParametersPageComponent implements OnInit {
         },
         error: () => {
           this.loading = false;
-          this.snackBar.open('Impossible de charger les paramètres (liaison effet/condition introuvable ?)', 'Fermer', {
-            duration: 5000
-          });
+          this.ui.showError('Impossible de charger les paramètres (liaison effet/condition introuvable ?)', 5000);
         }
       });
     });
@@ -67,19 +66,9 @@ export class ConditionParametersPageComponent implements OnInit {
         if (done + errors === tasks.length) {
           this.load();
           if (errors === 0) {
-            this.snackBar.open('✓ Paramètres enregistrés avec succès', 'Fermer', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
+            this.ui.showSuccess('✓ Paramètres enregistrés avec succès');
           } else {
-            this.snackBar.open(`⚠ ${done} paramètre(s) enregistré(s), ${errors} erreur(s)`, 'Fermer', {
-              duration: 4000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['warning-snackbar']
-            });
+            this.ui.showWarning(`⚠ ${done} paramètre(s) enregistré(s), ${errors} erreur(s)`);
           }
         }
       },
@@ -88,12 +77,7 @@ export class ConditionParametersPageComponent implements OnInit {
         console.error('Erreur lors de l\'enregistrement:', error);
         if (done + errors === tasks.length) {
           this.load();
-          this.snackBar.open('✕ Erreur lors de l\'enregistrement des paramètres', 'Fermer', {
-            duration: 4000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
+          this.ui.showError('✕ Erreur lors de l\'enregistrement des paramètres');
         }
       }
     }));

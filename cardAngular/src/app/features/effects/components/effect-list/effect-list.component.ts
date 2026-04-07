@@ -473,7 +473,6 @@ export class EffectListComponent implements OnInit {
   private saveEffect(effectData: any): void {
     console.log('💾 Données reçues du dialog:', effectData);
 
-    // Préparer les données avec les relations
     const effectRequest = {
       id: effectData.id,
       effectName: effectData.effectName,
@@ -485,12 +484,9 @@ export class EffectListComponent implements OnInit {
     console.log('📤 Requête envoyée au serveur:', effectRequest);
 
     if (effectData.id) {
-      // Modification d'un effet existant
       this.effectService.updateEffect(effectRequest).subscribe({
-        next: (updatedEffect) => {
-          console.log('✅ Effet modifié avec succès:', updatedEffect);
-          console.log('🔍 Type de réponse:', typeof updatedEffect);
-          console.log('🔍 Contenu de la réponse:', JSON.stringify(updatedEffect));
+        next: () => {
+          console.log('✅ Effet mis à jour (métadonnées + relations)');
           this.loadEffects();
         },
         error: (error: any) => {
@@ -498,21 +494,13 @@ export class EffectListComponent implements OnInit {
         }
       });
     } else {
-      // Création d'un nouvel effet
       this.effectService.createEffect(effectRequest).subscribe({
         next: (newEffect) => {
-          console.log('✅ Effet créé avec succès:', newEffect);
-          console.log('🔍 Relations dans la réponse de création:', {
-            conditions: newEffect.conditions?.length || newEffect.conditionCards?.length || 0,
-            actions: newEffect.actions?.length || 0
-          });
-
-          // Attendre un peu avant de recharger pour laisser le temps au serveur de traiter les relations
+          console.log('✅ Effet créé avec relations:', newEffect);
           setTimeout(() => {
             console.log('🔄 Rechargement des effets après création...');
-            // Tester d'abord l'endpoint standard pour l'effet créé
             this.testEffectById(newEffect.id);
-          this.loadEffects();
+            this.loadEffects();
           }, 1000);
         },
         error: (error: any) => {

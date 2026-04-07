@@ -27,6 +27,8 @@ export class ParameterEditorComponent implements OnInit, OnChanges {
 
   form!: FormGroup;
   optionsByCode = new Map<string, EnumOptionDTO[]>();
+  private lastDefsSignature = '';
+  private lastValuesSignature = '';
 
   constructor(private fb: FormBuilder, private paramDefSrv: ParameterDefinitionService) {}
 
@@ -38,22 +40,32 @@ export class ParameterEditorComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Réagir aux changements de currentValues ou definitions après l'initialisation
-    // Ne réinitialiser que si le form est déjà initialisé (après ngOnInit)
-    if (this.form && (changes['currentValues'] || changes['definitions'])) {
-      // Vérifier que les définitions sont chargées avant de réinitialiser
-      if (this.definitions && this.definitions.length > 0) {
-        // Vider le FormArray avant de réinitialiser
-        while (this.items.length !== 0) {
-          this.items.removeAt(0);
-        }
-        // Réinitialiser les options si les définitions ont changé
-        if (changes['definitions']) {
-          this.optionsByCode.clear();
-        }
-        this.initItems();
-      }
+    if (!this.form || (!changes['currentValues'] && !changes['definitions'])) {
+      return;
     }
+
+    if (!this.definitions || this.definitions.length === 0) {
+      return;
+    }
+
+    const defsSignature = this.getDefinitionsSignature(this.definitions);
+    const valuesSignature = this.getValuesSignature(this.currentValues);
+    const defsChangedMeaningfully = defsSignature !== this.lastDefsSignature;
+    const valuesChangedMeaningfully = valuesSignature !== this.lastValuesSignature;
+
+    if (!defsChangedMeaningfully && !valuesChangedMeaningfully) {
+      return;
+    }
+
+    // Si les définitions changent réellement, on réinitialise aussi le cache d'options.
+    if (defsChangedMeaningfully) {
+      this.optionsByCode.clear();
+    }
+
+    while (this.items.length !== 0) {
+      this.items.removeAt(0);
+    }
+    this.initItems();
   }
 
   get items(): FormArray {
@@ -93,6 +105,32 @@ export class ParameterEditorComponent implements OnInit, OnChanges {
       this.applyValidators(group, def.valueType, def.code);
       this.items.push(group);
     }
+
+    this.lastDefsSignature = this.getDefinitionsSignature(this.definitions);
+    this.lastValuesSignature = this.getValuesSignature(this.currentValues);
+  }
+
+  private getDefinitionsSignature(defs: ParameterDefinitionDTO[]): string {
+    // Signature stable pour éviter les rebuilds causés par de nouvelles références de tableau.
+    return defs.map(d => `${d.code}|${d.valueType}|${d.label ?? ''}`).join('||');
+  }
+
+  private getValuesSignature(
+    values: (ActionParameterValueDTO | ConditionParameterValueDTO | EffectParameterValueDTO)[]
+  ): string {
+    // On inclut enabled implicite via présence/absence + les valeurs stockées.
+    return values
+      .map(v => {
+        const anyV: any = v as any;
+        return [
+          v.parameterDefinitionCode ?? '',
+          anyV.valueString ?? '',
+          anyV.valueNumber ?? '',
+          anyV.enumOptionCode ?? ''
+        ].join('|');
+      })
+      .sort()
+      .join('||');
   }
 
   private applyValidators(group: FormGroup, type: ParameterValueType, defCode?: string): void {

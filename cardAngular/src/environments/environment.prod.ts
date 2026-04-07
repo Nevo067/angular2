@@ -1,4 +1,4 @@
-// Variable d'environnement pour l'URL de l'API
+// Variable d'environnement pour l'URL de l'API (conventions chemins : src/app/core/api-conventions.ts)
 // Peut être remplacée au build ou via nginx
 declare const API_URL: string;
 

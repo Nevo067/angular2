@@ -1,12 +1,13 @@
 import { Component, Inject, OnInit, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Effect, ConditionCard, ActionCard, EffectParameterValueDTO, ParameterDefinitionDTO, ActionParameterValueDTO, ConditionParameterValueDTO } from '../../../../core/models';
 import { ActionParameterService, ConditionCardService, ActionCardService, EffectParameterService, ParameterDefinitionService } from '../../../../core/services';
 import { ParameterEditorComponent } from '../../../../shared/components/parameter-editor/parameter-editor.component';
+import { UiFeedbackService } from '../../../../shared/services/ui-feedback.service';
 
 @Component({
   selector: 'app-effect-edit-dialog',
@@ -24,6 +25,8 @@ export class EffectEditDialogComponent implements OnInit {
   /** Codes ParameterDefinition déclarés sur chaque carte action (filtre éditeur effet). */
   actionCatalogCodes: Map<number, Set<string>> = new Map();
   expandedActions: Set<number> = new Set();
+  /** True pendant la sauvegarde des paramètres d’effet (évite double clic et indique l’attente). */
+  saving = false;
   @ViewChildren(ParameterEditorComponent) parameterEditors!: QueryList<ParameterEditorComponent>;
 
   constructor(
@@ -35,7 +38,8 @@ export class EffectEditDialogComponent implements OnInit {
     private actionParameterService: ActionParameterService,
     private effectParameterService: EffectParameterService,
     private parameterDefinitionService: ParameterDefinitionService,
-    private router: Router
+    private router: Router,
+    private ui: UiFeedbackService
   ) {
     this.isEditMode = !!data.effect;
   }
@@ -233,31 +237,35 @@ export class EffectEditDialogComponent implements OnInit {
   }
 
   onSave(): void {
-    if (this.effectForm.valid) {
-      const formValue = this.effectForm.value;
-      console.log('💾 Sauvegarde de l\'effet:', formValue);
-      console.log('📋 Actions sélectionnées:', formValue.selectedActions);
-      console.log('📋 Conditions sélectionnées:', formValue.selectedConditions);
-
-      // Sauvegarder tous les paramètres modifiés avant de fermer
-      if (this.isEditMode && this.data.effect?.id) {
-        this.saveAllParameters().then(() => {
-          console.log('✅ Tous les paramètres sauvegardés, fermeture du dialog');
-          this.dialogRef.close(formValue);
-        }).catch(error => {
-          console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
-          // Demander confirmation pour continuer quand même
-          if (confirm('Erreur lors de la sauvegarde des paramètres. Voulez-vous continuer quand même ?')) {
-            this.dialogRef.close(formValue);
-          }
-        });
-      } else {
-        // Pas en mode édition ou pas d'effet, fermer directement
-        this.dialogRef.close(formValue);
-      }
-    } else {
-      console.log('❌ Formulaire invalide:', this.effectForm.errors);
+    if (this.effectForm.invalid) {
       this.markFormGroupTouched();
+      this.ui.showError('Remplissez le nom (2 caractères minimum) et la description avant d’enregistrer.', 5000);
+      return;
+    }
+    if (this.saving) {
+      return;
+    }
+
+    const formValue = this.effectForm.getRawValue();
+
+    if (this.isEditMode && this.data.effect?.id) {
+      this.saving = true;
+      this.saveAllParameters()
+        .then(() => {
+          this.dialogRef.close(formValue);
+        })
+        .catch(() => {
+          this.ui.showWarning(
+            'Certains paramètres d’effet n’ont pas pu être enregistrés. Les conditions et actions sont tout de même enregistrées.',
+            8000
+          );
+          this.dialogRef.close(formValue);
+        })
+        .finally(() => {
+          this.saving = false;
+        });
+    } else {
+      this.dialogRef.close(formValue);
     }
   }
 
@@ -306,10 +314,15 @@ export class EffectEditDialogComponent implements OnInit {
   }
 
   private markFormGroupTouched(): void {
-    Object.keys(this.effectForm.controls).forEach(key => {
-      const control = this.effectForm.get(key);
-      control?.markAsTouched();
-    });
+    const mark = (control: AbstractControl): void => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        Object.values(control.controls).forEach(mark);
+      } else if (control instanceof FormArray) {
+        control.controls.forEach(mark);
+      }
+    };
+    mark(this.effectForm);
   }
 
   // Méthodes pour la validation des erreurs
@@ -383,59 +396,103 @@ export class EffectEditDialogComponent implements OnInit {
     return isSelected;
   }
 
+  /**
+   * Ordre identique au FormArray (selectedConditions). Ne pas utiliser filter() seul sur
+   * available* : l’ordre du catalogue ne suit pas l’ordre de sélection, ce qui cassait
+   * remove/move par index dans le *ngFor.
+   */
   getSelectedConditions(): ConditionCard[] {
     const selectedIds = this.selectedConditionsArray.controls.map(control => control.value);
-    return this.availableConditions.filter(condition => selectedIds.includes(condition.id));
+    const byId = new Map(this.availableConditions.map(c => [c.id, c]));
+    return selectedIds.map(id => byId.get(id)).filter((c): c is ConditionCard => c != null);
   }
 
   getSelectedActions(): ActionCard[] {
     const selectedIds = this.selectedActionsArray.controls.map(control => control.value);
-    return this.availableActions.filter(action => selectedIds.includes(action.id));
+    const byId = new Map(this.availableActions.map(a => [a.id, a]));
+    return selectedIds.map(id => byId.get(id)).filter((a): a is ActionCard => a != null);
   }
 
   // Méthodes pour réorganiser l'ordre
-  moveConditionUp(index: number): void {
+  moveConditionUp(conditionId: number): void {
+    const conditionsArray = this.selectedConditionsArray;
+    const index = conditionsArray.controls.findIndex(c => c.value === conditionId);
     if (index > 0) {
-      const conditionsArray = this.selectedConditionsArray;
       const condition = conditionsArray.at(index);
       conditionsArray.removeAt(index);
       conditionsArray.insert(index - 1, condition);
     }
   }
 
-  moveConditionDown(index: number): void {
+  moveConditionDown(conditionId: number): void {
     const conditionsArray = this.selectedConditionsArray;
-    if (index < conditionsArray.length - 1) {
+    const index = conditionsArray.controls.findIndex(c => c.value === conditionId);
+    if (index >= 0 && index < conditionsArray.length - 1) {
       const condition = conditionsArray.at(index);
       conditionsArray.removeAt(index);
       conditionsArray.insert(index + 1, condition);
     }
   }
 
-  moveActionUp(index: number): void {
+  moveActionUp(actionId: number): void {
+    const actionsArray = this.selectedActionsArray;
+    const index = actionsArray.controls.findIndex(c => c.value === actionId);
     if (index > 0) {
-      const actionsArray = this.selectedActionsArray;
       const action = actionsArray.at(index);
       actionsArray.removeAt(index);
       actionsArray.insert(index - 1, action);
     }
   }
 
-  moveActionDown(index: number): void {
+  moveActionDown(actionId: number): void {
     const actionsArray = this.selectedActionsArray;
-    if (index < actionsArray.length - 1) {
+    const index = actionsArray.controls.findIndex(c => c.value === actionId);
+    if (index >= 0 && index < actionsArray.length - 1) {
       const action = actionsArray.at(index);
       actionsArray.removeAt(index);
       actionsArray.insert(index + 1, action);
     }
   }
 
-  removeCondition(index: number): void {
-    this.selectedConditionsArray.removeAt(index);
+  removeCondition(conditionId: number): void {
+    const arr = this.selectedConditionsArray;
+    const idx = arr.controls.findIndex(c => c.value === conditionId);
+    if (idx >= 0) {
+      arr.removeAt(idx);
+    }
   }
 
-  removeAction(index: number): void {
-    this.selectedActionsArray.removeAt(index);
+  removeAction(actionId: number): void {
+    const arr = this.selectedActionsArray;
+    const idx = arr.controls.findIndex(c => c.value === actionId);
+    if (idx >= 0) {
+      arr.removeAt(idx);
+    }
+    this.expandedActions.delete(actionId);
+    this.actionParameters.delete(actionId);
+    this.actionCatalogCodes.delete(actionId);
+  }
+
+  canMoveConditionUp(conditionId: number): boolean {
+    const idx = this.selectedConditionsArray.controls.findIndex(c => c.value === conditionId);
+    return idx > 0;
+  }
+
+  canMoveConditionDown(conditionId: number): boolean {
+    const arr = this.selectedConditionsArray;
+    const idx = arr.controls.findIndex(c => c.value === conditionId);
+    return idx >= 0 && idx < arr.length - 1;
+  }
+
+  canMoveActionUp(actionId: number): boolean {
+    const idx = this.selectedActionsArray.controls.findIndex(c => c.value === actionId);
+    return idx > 0;
+  }
+
+  canMoveActionDown(actionId: number): boolean {
+    const arr = this.selectedActionsArray;
+    const idx = arr.controls.findIndex(c => c.value === actionId);
+    return idx >= 0 && idx < arr.length - 1;
   }
 
   // Obtenir l'ordre de sélection
