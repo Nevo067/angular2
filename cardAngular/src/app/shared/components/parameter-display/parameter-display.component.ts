@@ -88,8 +88,9 @@ export class ParameterDisplayComponent implements OnInit {
       }
 
       let displayValue = 'N/A';
-      if (definition.valueType === 'STRING' && value.valueString) {
-        displayValue = value.valueString;
+      if (definition.valueType === 'STRING') {
+        displayValue =
+          value.valueString != null && value.valueString !== '' ? value.valueString : '—';
       } else if (definition.valueType === 'NUMBER' && value.valueNumber !== null && value.valueNumber !== undefined) {
         displayValue = value.valueNumber.toString();
       } else if (definition.valueType === 'ENUM' && value.enumOptionCode) {

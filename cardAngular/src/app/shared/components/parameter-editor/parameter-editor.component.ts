@@ -99,7 +99,11 @@ export class ParameterEditorComponent implements OnInit, OnChanges {
         enabled: [!!existing],
         parameterDefinitionCode: [def.code, Validators.required],
         valueString: [initialValueString],
-        valueNumber: [existing?.valueNumber || null],
+        valueNumber: [
+          existing != null && existing.valueNumber !== null && existing.valueNumber !== undefined
+            ? existing.valueNumber
+            : null
+        ],
         enumOptionCode: [initialEnumOptionCode]
       });
       this.applyValidators(group, def.valueType, def.code);
@@ -146,16 +150,7 @@ export class ParameterEditorComponent implements OnInit, OnChanges {
       return;
     }
 
-    // Pour STRING avec options, on valide valueString (qui contient le code de l'option)
-    const hasOptions = defCode ? this.hasOptions(defCode) : false;
-    
-    if (type === 'STRING') {
-      group.get('valueString')!.setValidators([Validators.required]);
-    } else if (type === 'NUMBER') {
-      group.get('valueNumber')!.setValidators([Validators.required]);
-    } else if (type === 'ENUM') {
-      group.get('enumOptionCode')!.setValidators([Validators.required]);
-    }
+    // Valeurs optionnelles côté UI : chaîne vide, 0 par défaut pour les nombres, ENUM défaut côté payload / serveur
     group.get('valueString')!.updateValueAndValidity();
     group.get('valueNumber')!.updateValueAndValidity();
     group.get('enumOptionCode')!.updateValueAndValidity();
@@ -174,13 +169,33 @@ export class ParameterEditorComponent implements OnInit, OnChanges {
     if (this.optionsByCode.has(defCode)) return;
     this.paramDefSrv.listEnumOptions(defCode).subscribe({
       next: (opts) => {
-        if (opts && opts.length > 0) {
-          this.optionsByCode.set(defCode, opts);
-        }
+        this.optionsByCode.set(defCode, opts ?? []);
+        this.applyEnumDefaultAfterOptionsLoaded(defCode);
       },
       error: () => {
-        // Si erreur, on assume qu'il n'y a pas d'options
         this.optionsByCode.set(defCode, []);
+      }
+    });
+  }
+
+  /** Après chargement des options : pré-sélectionner la première valeur pour les ENUM encore vides. */
+  private applyEnumDefaultAfterOptionsLoaded(defCode: string): void {
+    const opts = this.optionsByCode.get(defCode);
+    if (!opts?.length || !this.form) {
+      return;
+    }
+    this.items.controls.forEach((ctrl, idx) => {
+      const def = this.definitions[idx];
+      if (!def || def.code !== defCode || def.valueType !== 'ENUM') {
+        return;
+      }
+      const g = ctrl as FormGroup;
+      if (!g.get('enabled')?.value) {
+        return;
+      }
+      const cur = g.get('enumOptionCode')?.value;
+      if (cur == null || cur === '') {
+        g.patchValue({ enumOptionCode: opts[0].code }, { emitEvent: false });
       }
     });
   }
@@ -250,18 +265,44 @@ export class ParameterEditorComponent implements OnInit, OnChanges {
         // Pour les STRING avec options : sauvegarder dans valueString ET enumOptionCode
         if (def.valueType === 'STRING' && hasOpts) {
           const selectedOptionCode = v.valueString || v.enumOptionCode;
-          basePayload.valueString = selectedOptionCode ?? null;
-          basePayload.enumOptionCode = selectedOptionCode ?? null;
+          const str =
+            selectedOptionCode != null && String(selectedOptionCode).trim() !== ''
+              ? String(selectedOptionCode)
+              : '';
+          basePayload.valueString = str;
+          basePayload.enumOptionCode = str || null;
           return basePayload;
         }
-        
-        // Pour les ENUM : utiliser enumOptionCode
+
+        // Pour les ENUM : défaut = première option si rien de choisi
         if (def.valueType === 'ENUM') {
-          basePayload.enumOptionCode = v.enumOptionCode ?? null;
+          const opts = this.optionsByCode.get(def.code) ?? [];
+          let code = v.enumOptionCode as string | null;
+          if ((code == null || code === '') && opts.length > 0) {
+            code = opts[0].code;
+          }
+          basePayload.enumOptionCode = code ?? null;
           return basePayload;
         }
-        
-        // Pour les autres types : comportement normal
+
+        // STRING sans options : chaîne vide si absent
+        if (def.valueType === 'STRING') {
+          const s = v.valueString;
+          basePayload.valueString = s != null ? String(s) : '';
+          return basePayload;
+        }
+
+        // NUMBER : 0 si vide
+        if (def.valueType === 'NUMBER') {
+          const n = v.valueNumber;
+          if (n === null || n === undefined || n === '') {
+            basePayload.valueNumber = 0;
+          } else {
+            basePayload.valueNumber = typeof n === 'number' ? n : Number(n);
+          }
+          return basePayload;
+        }
+
         basePayload.valueString = v.valueString ?? null;
         basePayload.valueNumber = v.valueNumber ?? null;
         return basePayload;
