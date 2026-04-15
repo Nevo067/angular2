@@ -8,6 +8,7 @@ import { ActionCard } from '../../../../core/models';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
 import { downloadJsonFile } from '../../../../shared/utils/download-json';
+import { serializeParameterValues } from '../../../../shared/utils/export-parameters';
 import { ActionEditDialogComponent } from '../action-edit-dialog/action-edit-dialog.component';
 
 @Component({
@@ -143,15 +144,7 @@ export class ActionListComponent implements OnInit {
         description: c.description ?? ''
       };
     }
-    const params = a.parameters || [];
-    if (params.length > 0) {
-      row['parameters'] = params.map((p) => ({
-        parameterDefinitionCode: p.parameterDefinitionCode,
-        valueString: p.valueString ?? null,
-        valueNumber: p.valueNumber ?? null,
-        enumOptionCode: p.enumOptionCode ?? null
-      }));
-    }
+    row['parameters'] = serializeParameterValues(a.parameters);
     return row;
   }
 

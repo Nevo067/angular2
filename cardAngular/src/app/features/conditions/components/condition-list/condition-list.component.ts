@@ -2,15 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { ConditionCardService } from '../../../../core/services';
+import { ActionCardService, ConditionCardService } from '../../../../core/services';
 import { ActionCard, ConditionCard } from '../../../../core/models';
 import { downloadJsonFile } from '../../../../shared/utils/download-json';
+import { serializeParameterValues } from '../../../../shared/utils/export-parameters';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
 import { ConditionEditDialogComponent } from '../condition-edit-dialog/condition-edit-dialog.component';
 import { ConditionRelationsDialogComponent } from '../condition-relations-dialog/condition-relations-dialog.component';
 import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, finalize, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-condition-list',
@@ -115,6 +116,7 @@ export class ConditionListComponent implements OnInit {
 
   constructor(
     private conditionCardService: ConditionCardService,
+    private actionCardService: ActionCardService,
     private dialog: MatDialog,
     private router: Router,
     private snackBar: MatSnackBar
@@ -129,31 +131,56 @@ export class ConditionListComponent implements OnInit {
       this.snackBar.open('Chargement en cours, patientez...', 'Fermer', { duration: 2500 });
       return;
     }
-    this.exporting = true;
-    try {
-      const payload = {
-        exportVersion: '1.0',
-        exportType: 'conditions' as const,
-        exportDate: new Date().toISOString(),
-        exportNote:
-          'Les paramètres numériques/texte d\'une condition liée à un effet ne sont pas exportés ici (ils dépendent de la liaison effet + condition).',
-        items: this.conditions.map((c) => this.mapConditionForExport(c))
-      };
-      downloadJsonFile(payload, 'conditions_export');
-      this.snackBar.open(`Export réussi ! ${this.conditions.length} condition(s)`, 'Fermer', { duration: 3000 });
-    } catch {
-      this.snackBar.open('Erreur lors de l\'export des conditions', 'Fermer', { duration: 3000 });
-    } finally {
-      this.exporting = false;
+    if (this.conditions.length === 0) {
+      this.snackBar.open('Aucune condition à exporter', 'Fermer', { duration: 2500 });
+      return;
     }
+    this.exporting = true;
+    this.snackBar.open('Export en cours...', 'Fermer', { duration: 2000 });
+
+    forkJoin({
+      conditions: of([...this.conditions]),
+      actionsWithParameters: this.actionCardService.getAllActionsWithParameters()
+    })
+      .pipe(finalize(() => (this.exporting = false)))
+      .subscribe({
+        next: ({ conditions, actionsWithParameters }) => {
+          const actionsById = new Map<number, ActionCard>();
+          actionsWithParameters.forEach((a) => {
+            if (a.id) {
+              actionsById.set(a.id, a);
+            }
+          });
+          const payload = {
+            exportVersion: '1.0',
+            exportType: 'conditions' as const,
+            exportDate: new Date().toISOString(),
+            exportNote:
+              'Les valeurs de paramètres de liaison effet×condition (spécifiques à une carte et à un effet) ne sont pas dans cet export ; utiliser l\'export cartes ou l\'export effets. Chaque action listée inclut ses paramètres globaux (définition d\'action).',
+            items: conditions.map((c) => this.mapConditionForExport(c, actionsById))
+          };
+          downloadJsonFile(payload, 'conditions_export');
+          this.snackBar.open(`Export réussi ! ${conditions.length} condition(s)`, 'Fermer', { duration: 3000 });
+        },
+        error: () => {
+          this.snackBar.open('Erreur lors de l\'export des conditions', 'Fermer', { duration: 3000 });
+        }
+      });
   }
 
-  private mapConditionForExport(c: ConditionCard): Record<string, unknown> {
-    const actions = (c.actions || []).map((a: ActionCard) => ({
-      id: a.id,
-      actionName: a.actionName ?? '',
-      description: a.description ?? ''
-    }));
+  private mapConditionForExport(
+    c: ConditionCard,
+    actionsById: Map<number, ActionCard>
+  ): Record<string, unknown> {
+    const actions = (c.actions || []).map((a: ActionCard) => {
+      const withParams = actionsById.get(a.id) ?? a;
+      return {
+        id: a.id,
+        actionName: a.actionName ?? '',
+        description: a.description ?? '',
+        parameters: serializeParameterValues(withParams.parameters)
+      };
+    });
     return {
       id: c.id,
       nameCondition: c.nameCondition ?? '',

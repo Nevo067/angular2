@@ -1,7 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { EffectService, ActionCardService, ConditionCardService } from '../../../../core/services';
-import { Effect } from '../../../../core/models';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import {
+  ActionCardService,
+  ConditionCardService,
+  ConditionParameterService,
+  EffectParameterService,
+  EffectService
+} from '../../../../core/services';
+import { ActionCard, Effect } from '../../../../core/models';
+import { downloadJsonFile } from '../../../../shared/utils/download-json';
+import {
+  buildEffectExportNode,
+  collectConditionParameterKeysFromEffects,
+  collectEffectActionParameterKeysFromEffects,
+  loadConditionParametersMapForKeys,
+  loadEffectActionParametersMapForKeys
+} from '../../../../shared/utils/effect-export-node';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
 import { EffectEditDialogComponent } from '../effect-edit-dialog/effect-edit-dialog.component';
@@ -19,6 +34,7 @@ import { catchError, map } from 'rxjs/operators';
 export class EffectListComponent implements OnInit {
   effects: Effect[] = [];
   loading = false;
+  exporting = false;
 
   tableConfig: TableConfig<Effect> = {
     columns: [
@@ -148,11 +164,63 @@ export class EffectListComponent implements OnInit {
     private effectService: EffectService,
     private actionCardService: ActionCardService,
     private conditionCardService: ConditionCardService,
-    private dialog: MatDialog
+    private conditionParameterService: ConditionParameterService,
+    private effectParameterService: EffectParameterService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.loadEffects();
+  }
+
+  exportEffectsToJson(): void {
+    if (this.effects.length === 0) {
+      this.snackBar.open('Aucun effet à exporter', 'Fermer', { duration: 2500 });
+      return;
+    }
+    this.exporting = true;
+    this.snackBar.open('Export en cours...', 'Fermer', { duration: 2000 });
+
+    this.actionCardService.getAllActionsWithParameters().subscribe({
+      next: (actionsWithParameters) => {
+        const actionsMap = new Map<number, ActionCard>();
+        actionsWithParameters.forEach((a) => {
+          if (a.id) {
+            actionsMap.set(a.id, a);
+          }
+        });
+        const effects = [...this.effects];
+        const keysCond = collectConditionParameterKeysFromEffects(effects);
+        const keysAct = collectEffectActionParameterKeysFromEffects(effects);
+        Promise.all([
+          loadConditionParametersMapForKeys(this.conditionParameterService, keysCond),
+          loadEffectActionParametersMapForKeys(this.effectParameterService, keysAct)
+        ])
+          .then(([conditionParamsMap, effectParamsMap]) => {
+            const payload = {
+              exportVersion: '1.0',
+              exportType: 'effects' as const,
+              exportDate: new Date().toISOString(),
+              items: effects.map((e) =>
+                buildEffectExportNode(e, actionsMap, conditionParamsMap, effectParamsMap)
+              )
+            };
+            downloadJsonFile(payload, 'effects_export');
+            this.snackBar.open(`Export réussi ! ${effects.length} effet(s)`, 'Fermer', { duration: 3000 });
+          })
+          .catch(() => {
+            this.snackBar.open('Erreur lors de l\'export des effets', 'Fermer', { duration: 3000 });
+          })
+          .finally(() => {
+            this.exporting = false;
+          });
+      },
+      error: () => {
+        this.exporting = false;
+        this.snackBar.open('Erreur lors de l\'export des effets', 'Fermer', { duration: 3000 });
+      }
+    });
   }
 
   loadEffects(): void {

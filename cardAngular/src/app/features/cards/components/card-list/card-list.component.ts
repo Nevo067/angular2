@@ -7,7 +7,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CardService, ActionCardService, ConditionCardService, ConditionParameterService, EffectParameterService } from '../../../../core/services';
-import { Card, Effect, ActionCard, ParameterDefinitionDTO } from '../../../../core/models';
+import { Card, ActionCard, ParameterDefinitionDTO } from '../../../../core/models';
+import {
+  buildEffectExportNode,
+  collectConditionParameterKeysFromEffects,
+  collectEffectActionParameterKeysFromEffects,
+  loadConditionParametersMapForKeys,
+  loadEffectActionParametersMapForKeys
+} from '../../../../shared/utils/effect-export-node';
 import { MonsterType, ElementType, CardType, CardTypeLabels } from '../../../../core/enums';
 import { DataTableComponent } from '../../../../shared/components';
 import { TableConfig, TableAction } from '../../../../shared/models';
@@ -309,7 +316,7 @@ export class CardListComponent implements OnInit {
         ]).then(([conditionParamsMap, effectParamsMap]) => {
           // Transformer les cartes au format d'export avec les paramètres
           const exportData = {
-            exportVersion: '1.2',
+            exportVersion: '1.3',
             exportDate: new Date().toISOString(),
             cards: cards.map(card => this.transformCardForExport(card, actionsMap, conditionParamsMap, effectParamsMap))
           };
@@ -333,75 +340,15 @@ export class CardListComponent implements OnInit {
   }
 
   private async loadConditionParameters(cards: Card[]): Promise<Map<string, any[]>> {
-    const conditionParamsMap = new Map<string, any[]>();
-    const pairs = new Set<string>();
-
-    cards.forEach(card => {
-      card.effects?.forEach(effect => {
-        if (!effect.id) {
-          return;
-        }
-        const ids: number[] = effect.conditions?.length
-          ? effect.conditions.map(c => c.conditionId)
-          : (effect.conditionCards || []).map(c => c.id);
-        ids.filter(Boolean).forEach(cid => pairs.add(`${effect.id}-${cid}`));
-      });
-    });
-
-    const loadPromises = Array.from(pairs).map(key => {
-      const [effectIdStr, conditionIdStr] = key.split('-');
-      const effectId = Number(effectIdStr);
-      const conditionId = Number(conditionIdStr);
-      return this.conditionParameterService.list(effectId, conditionId).toPromise().then(
-        params => {
-          if (params) {
-            conditionParamsMap.set(key, params);
-          }
-          return null;
-        }
-      ).catch(() => null);
-    });
-
-    await Promise.all(loadPromises);
-    return conditionParamsMap;
+    const effects = cards.flatMap((c) => c.effects || []);
+    const keys = collectConditionParameterKeysFromEffects(effects);
+    return loadConditionParametersMapForKeys(this.conditionParameterService, keys);
   }
 
   private async loadEffectParameters(cards: Card[]): Promise<Map<string, any[]>> {
-    const effectParamsMap = new Map<string, any[]>();
-    
-    // Collecter toutes les combinaisons effectId-actionId uniques
-    const effectActionPairs = new Set<string>();
-    cards.forEach(card => {
-      card.effects?.forEach(effect => {
-        if (effect.id) {
-          effect.actions?.forEach(action => {
-            if (action.id) {
-              const key = `${effect.id}-${action.id}`;
-              effectActionPairs.add(key);
-            }
-          });
-        }
-      });
-    });
-
-    // Charger les paramètres pour chaque combinaison effet/action
-    const loadPromises = Array.from(effectActionPairs).map(key => {
-      const [effectIdStr, actionIdStr] = key.split('-');
-      const effectId = Number(effectIdStr);
-      const actionId = Number(actionIdStr);
-      
-      return this.effectParameterService.list(effectId, actionId).toPromise().then(
-        params => {
-          if (params && params.length > 0) {
-            effectParamsMap.set(key, params);
-          }
-          return null;
-        }
-      ).catch(() => null);
-    });
-
-    await Promise.all(loadPromises);
-    return effectParamsMap;
+    const effects = cards.flatMap((c) => c.effects || []);
+    const keys = collectEffectActionParameterKeysFromEffects(effects);
+    return loadEffectActionParametersMapForKeys(this.effectParameterService, keys);
   }
 
   private transformCardForExport(card: Card, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<string, any[]>, effectParamsMap: Map<string, any[]>): any {
@@ -418,100 +365,11 @@ export class CardListComponent implements OnInit {
       level: card.level ?? null,
       manaValue: card.manaValue ?? null,
       manaValueRole: (card.cardType === CardType.MONSTRE || card.cardType === CardType.MAGIC) ? 'COST' : (card.cardType === CardType.MANA ? 'VALUE' : null),
-      effects: (card.effects || []).map(effect => this.transformEffectForExport(effect, actionsMap, conditionParamsMap, effectParamsMap)),
+      effects: (card.effects || []).map((effect) =>
+        buildEffectExportNode(effect, actionsMap, conditionParamsMap, effectParamsMap)
+      ),
       imageUrl: card.imageUrl || ''
     };
-  }
-
-  private transformEffectForExport(effect: Effect, actionsMap: Map<number, ActionCard>, conditionParamsMap: Map<string, any[]>, effectParamsMap: Map<string, any[]>): any {
-    // Collecter tous les paramètres d'effet pour cet effet
-    const effectParametersByAction: any = {};
-    if (effect.actions) {
-      effect.actions.forEach(action => {
-        if (action.id) {
-          const effectParamsKey = `${effect.id}-${action.id}`;
-          const effectParameters = effectParamsMap.get(effectParamsKey) || [];
-          if (effectParameters.length > 0) {
-            effectParametersByAction[action.id] = effectParameters.map((param: any) => ({
-              parameterDefinitionCode: param.parameterDefinitionCode,
-              valueString: param.valueString ?? null,
-              valueNumber: param.valueNumber ?? null,
-              enumOptionCode: param.enumOptionCode ?? null
-            }));
-          }
-        }
-      });
-    }
-
-    const conditionRows =
-      effect.conditions?.length
-        ? effect.conditions
-        : (effect.conditionCards || []).map(c => ({
-            conditionId: c.id,
-            nameCondition: c.nameCondition,
-            description: c.description,
-            parameters: [] as any[]
-          }));
-
-    const effectData: any = {
-      id: effect.id,
-      effectName: effect.effectName || '',
-      description: effect.description || '',
-      conditionCards: conditionRows.map((condition: any) => {
-        const cid = condition.conditionId ?? condition.id;
-        const key = `${effect.id}-${cid}`;
-        const embedded = condition.parameters;
-        const conditionParams =
-          embedded && embedded.length > 0 ? embedded : conditionParamsMap.get(key) || [];
-
-        const conditionData: any = {
-          id: cid,
-          nameCondition: condition.nameCondition || '',
-          description: condition.description || ''
-        };
-
-        if (conditionParams.length > 0) {
-          conditionData.parameters = conditionParams.map((param: any) => ({
-            parameterDefinitionCode: param.parameterDefinitionCode,
-            valueString: param.valueString ?? null,
-            valueNumber: param.valueNumber ?? null,
-            enumOptionCode: param.enumOptionCode ?? null
-          }));
-        }
-
-        return conditionData;
-      }),
-      actions: (effect.actions || []).map(action => {
-        // Récupérer l'action avec paramètres depuis la Map
-        const actionWithParameters = actionsMap.get(action.id);
-        const parameters = actionWithParameters?.parameters || [];
-        
-        const actionData: any = {
-          id: action.id,
-          actionName: action.actionName || '',
-          description: action.description || ''
-        };
-        
-        // Ajouter les paramètres d'action généraux seulement s'il y en a
-        if (parameters.length > 0) {
-          actionData.parameters = parameters.map(param => ({
-            parameterDefinitionCode: param.parameterDefinitionCode,
-            valueString: param.valueString ?? null,
-            valueNumber: param.valueNumber ?? null,
-            enumOptionCode: param.enumOptionCode ?? null
-          }));
-        }
-        
-        return actionData;
-      })
-    };
-
-    // Ajouter les paramètres d'effet au niveau de l'effet seulement s'il y en a
-    if (Object.keys(effectParametersByAction).length > 0) {
-      effectData.effectParameters = effectParametersByAction;
-    }
-
-    return effectData;
   }
 
   private downloadJsonFile(data: any, filename: string): void {
